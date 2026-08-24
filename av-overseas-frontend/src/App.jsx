@@ -2204,7 +2204,7 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Minimal & Professional Expert Payouts Table (4 Columns Only) */}
+              {/* Minimal & Professional Expert Payouts Table (Clean 5-Column Layout) */}
               <div className="table-container" style={{ border: '1px solid var(--border-glass)', borderRadius: 'var(--radius-md)', background: '#ffffff' }}>
                 <table className="premium-table" style={{ margin: 0, width: '100%' }}>
                   <thead>
@@ -2212,7 +2212,8 @@ export default function App() {
                       <th style={{ padding: '0.8rem 1.25rem' }}>Expert</th>
                       <th style={{ padding: '0.8rem 1.25rem' }}>Course / Assignment</th>
                       <th style={{ padding: '0.8rem 1.25rem', textAlign: 'right' }}>Payout Amount (70%)</th>
-                      <th style={{ padding: '0.8rem 1.25rem', textAlign: 'center', width: '180px' }}>Action</th>
+                      <th style={{ padding: '0.8rem 1.25rem', textAlign: 'center', width: '170px' }}>Release (Payment)</th>
+                      <th style={{ padding: '0.8rem 1.25rem', textAlign: 'center', width: '130px' }}>Action</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -2245,7 +2246,7 @@ export default function App() {
                           </td>
 
                           {/* 2. Course / Assignment (Neatly truncated) */}
-                          <td style={{ padding: '0.8rem 1.25rem', maxWidth: '340px' }}>
+                          <td style={{ padding: '0.8rem 1.25rem', maxWidth: '320px' }}>
                             <div
                               style={{
                                 fontWeight: '600',
@@ -2268,35 +2269,49 @@ export default function App() {
                             </span>
                           </td>
 
-                          {/* 4. Action */}
+                          {/* 4. Release (Payment) Column */}
                           <td style={{ padding: '0.8rem 1.25rem', textAlign: 'center' }}>
-                            <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'center', alignItems: 'center' }}>
+                            {p?.status === 'RELEASED' ? (
+                              <span className="badge badge-success" style={{ fontSize: '0.72rem', padding: '0.2rem 0.55rem', fontWeight: '700' }}>
+                                ✓ Disbursed
+                              </span>
+                            ) : user?.role === 'ADMIN' && p?.status === 'APPROVED' && p?.assignmentId ? (
                               <button
                                 type="button"
-                                className="btn btn-secondary"
-                                style={{ fontSize: '0.75rem', padding: '0.35rem 0.65rem', fontWeight: '600' }}
-                                onClick={() => setSelectedPayout(p)}
+                                className="btn btn-primary"
+                                style={{ fontSize: '0.75rem', padding: '0.35rem 0.75rem', fontWeight: '700', whiteSpace: 'nowrap' }}
+                                onClick={() => handleReleasePayout(p.assignmentId)}
+                                title="Release compensation funds to mentor"
                               >
-                                View Details
+                                💸 Release Funds
                               </button>
-                              {user?.role === 'ADMIN' && p?.status === 'APPROVED' && p?.assignmentId && (
-                                <button
-                                  type="button"
-                                  className="btn btn-primary"
-                                  style={{ fontSize: '0.72rem', padding: '0.35rem 0.6rem', fontWeight: '600' }}
-                                  onClick={() => handleReleasePayout(p.assignmentId)}
-                                  title="Release Funds to Mentor"
-                                >
-                                  Release
-                                </button>
-                              )}
-                            </div>
+                            ) : p?.status === 'APPROVED' ? (
+                              <span className="badge badge-info" style={{ fontSize: '0.72rem', padding: '0.2rem 0.55rem', fontWeight: '700' }}>
+                                ⏳ In Escrow
+                              </span>
+                            ) : (
+                              <span className="badge badge-pending" style={{ fontSize: '0.72rem', padding: '0.2rem 0.55rem', fontWeight: '700' }}>
+                                ⏳ Pending
+                              </span>
+                            )}
+                          </td>
+
+                          {/* 5. Action (View Details) */}
+                          <td style={{ padding: '0.8rem 1.25rem', textAlign: 'center' }}>
+                            <button
+                              type="button"
+                              className="btn btn-secondary"
+                              style={{ fontSize: '0.75rem', padding: '0.35rem 0.75rem', fontWeight: '600', whiteSpace: 'nowrap' }}
+                              onClick={() => setSelectedPayout(p)}
+                            >
+                              View Details
+                            </button>
                           </td>
                         </tr>
                       ))}
                     {(Array.isArray(payoutsList) ? payoutsList : []).length === 0 && (
                       <tr>
-                        <td colSpan="4" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', fontSize: '0.82rem' }}>
+                        <td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', fontSize: '0.82rem' }}>
                           No expert payout records created yet.
                         </td>
                       </tr>
