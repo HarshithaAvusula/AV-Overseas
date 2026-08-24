@@ -69,6 +69,9 @@ export default function App() {
   const [expertsList, setExpertsList] = useState([]);
   const [studentsList, setStudentsList] = useState([]);
   const [studentSearchQuery, setStudentSearchQuery] = useState('');
+  const [paymentsList, setPaymentsList] = useState([]);
+  const [revenueReport, setRevenueReport] = useState(null);
+  const [paymentSearchQuery, setPaymentSearchQuery] = useState('');
   
   // Custom slots variables
   const [selectedExpertId, setSelectedExpertId] = useState('');
@@ -133,9 +136,11 @@ export default function App() {
     if (user) {
       fetchAssignments();
       fetchNotifications();
+      fetchPayments();
       if (user.role === 'ADMIN') {
         fetchExperts();
         fetchStudents();
+        fetchRevenueReport();
       }
     } else {
       setAssignments([]);
@@ -143,6 +148,8 @@ export default function App() {
       setNotifications([]);
       setStudentsList([]);
       setExpertsList([]);
+      setPaymentsList([]);
+      setRevenueReport(null);
     }
   }, [user]);
 
@@ -178,9 +185,11 @@ export default function App() {
       if (user) {
         fetchNotifications();
         fetchAssignments();
+        fetchPayments();
         if (user.role === 'ADMIN') {
           fetchStudents();
           fetchExperts();
+          fetchRevenueReport();
         }
       }
     }, 4000);
@@ -314,6 +323,28 @@ export default function App() {
       const res = await fetch(`${API_BASE}/users/students`, { headers: headers() });
       if (res.ok) {
         setStudentsList(await res.json());
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const fetchPayments = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/payments`, { headers: headers() });
+      if (res.ok) {
+        setPaymentsList(await res.json());
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const fetchRevenueReport = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/reports/revenue`, { headers: headers() });
+      if (res.ok) {
+        setRevenueReport(await res.json());
       }
     } catch (e) {
       console.error(e);
@@ -643,28 +674,38 @@ export default function App() {
     }
   };
 
-  const handleApprovePayout = async () => {
+  const handleApprovePayout = async (assignId) => {
+    const targetId = assignId || activeAssignment?.id;
+    if (!targetId) return;
     try {
-      const res = await fetch(`${API_BASE}/payouts/approve?assignmentId=${activeAssignment.id}`, {
+      const res = await fetch(`${API_BASE}/payouts/approve?assignmentId=${targetId}`, {
         method: 'POST',
         headers: headers()
       });
       if (res.ok) {
-        fetchAuditTrail();
+        fetchPayments();
+        fetchRevenueReport();
+        fetchAssignments();
+        if (activeAssignment) fetchAuditTrail();
       }
     } catch (e) {
       console.error(e);
     }
   };
 
-  const handleReleasePayout = async () => {
+  const handleReleasePayout = async (assignId) => {
+    const targetId = assignId || activeAssignment?.id;
+    if (!targetId) return;
     try {
-      const res = await fetch(`${API_BASE}/payouts/release?assignmentId=${activeAssignment.id}`, {
+      const res = await fetch(`${API_BASE}/payouts/release?assignmentId=${targetId}`, {
         method: 'POST',
         headers: headers()
       });
       if (res.ok) {
+        fetchPayments();
+        fetchRevenueReport();
         fetchAssignments();
+        if (activeAssignment) fetchAuditTrail();
       }
     } catch (e) {
       console.error(e);
@@ -1648,34 +1689,197 @@ export default function App() {
             </div>
           )}
 
-          {/* VIEW: EARNINGS & PAYOUTS */}
+          {/* VIEW: EARNINGS & PAYOUTS / STUDENT PAYMENTS LOG */}
           {(currentView === 'earnings' || currentView === 'payouts' || currentView === 'payments') && !activeAssignment && (
             <div className="glass-panel" style={{ padding: '2rem' }}>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '1rem' }}>
-                {user.role === 'ADMIN' ? 'Student Payments Log' : 'Expert Earnings Ledger'}
-              </h3>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-                Financial transactions processed. Standard tutoring service package price is set at $150 USD.
-              </p>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <h3 style={{ fontSize: '1.25rem', fontWeight: '700', margin: 0 }}>
+                      {user.role === 'ADMIN' ? 'Student Payments & Expert Payouts Log' : user.role === 'EXPERT' ? 'Expert Earnings Ledger' : 'My Payment Receipts'}
+                    </h3>
+                    <span className="badge badge-success" style={{ fontSize: '0.78rem', padding: '0.3rem 0.65rem' }}>
+                      💳 {new Set(paymentsList.map(p => p.studentId || p.studentEmail)).size} Students Paid Till Date
+                    </span>
+                  </div>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.35rem' }}>
+                    {user.role === 'ADMIN' 
+                      ? 'Financial transactions log of all student deposits, verified Razorpay payments, and expert share payouts.'
+                      : 'All verified financial transactions and tutoring payments associated with your account.'}
+                  </p>
+                </div>
+
+                {/* Search Filter Box */}
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="🔍 Search payment by student, topic, ID..."
+                    value={paymentSearchQuery}
+                    onChange={e => setPaymentSearchQuery(e.target.value)}
+                    style={{ width: '280px', padding: '0.45rem 0.85rem', fontSize: '0.82rem' }}
+                  />
+                  {paymentSearchQuery && (
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      style={{ padding: '0.45rem 0.75rem', fontSize: '0.8rem' }}
+                      onClick={() => setPaymentSearchQuery('')}
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Financial KPI Cards */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+                <div className="metric-card" style={{ padding: '1rem 1.25rem', background: '#ffffff', borderLeft: '4px solid #10b981' }}>
+                  <span className="metric-label" style={{ fontSize: '0.72rem' }}>Students Paid Till Date</span>
+                  <span className="metric-value" style={{ fontSize: '1.5rem', color: '#059669' }}>
+                    {new Set(paymentsList.map(p => p.studentId || p.studentEmail)).size}
+                  </span>
+                  <span className="metric-desc">Distinct paying student accounts</span>
+                </div>
+                <div className="metric-card" style={{ padding: '1rem 1.25rem', background: '#ffffff', borderLeft: '4px solid var(--accent-primary)' }}>
+                  <span className="metric-label" style={{ fontSize: '0.72rem' }}>Total Revenue Captured</span>
+                  <span className="metric-value" style={{ fontSize: '1.5rem', color: 'var(--accent-primary)' }}>
+                    ${paymentsList.reduce((sum, p) => sum + (Number(p.amount) || 0), 0).toFixed(2)} USD
+                  </span>
+                  <span className="metric-desc">From {paymentsList.length} verified transactions</span>
+                </div>
+                {user.role === 'ADMIN' && (
+                  <>
+                    <div className="metric-card" style={{ padding: '1rem 1.25rem', background: '#ffffff', borderLeft: '4px solid #6366f1' }}>
+                      <span className="metric-label" style={{ fontSize: '0.72rem' }}>Expert Payouts Share (70%)</span>
+                      <span className="metric-value" style={{ fontSize: '1.5rem', color: '#4f46e5' }}>
+                        ${(paymentsList.reduce((sum, p) => sum + (Number(p.amount) || 0), 0) * 0.70).toFixed(2)} USD
+                      </span>
+                      <span className="metric-desc">Allocated to assigned tutors</span>
+                    </div>
+                    <div className="metric-card" style={{ padding: '1rem 1.25rem', background: '#ffffff', borderLeft: '4px solid #f59e0b' }}>
+                      <span className="metric-label" style={{ fontSize: '0.72rem' }}>Net Platform Margin (30%)</span>
+                      <span className="metric-value" style={{ fontSize: '1.5rem', color: '#d97706' }}>
+                        ${(paymentsList.reduce((sum, p) => sum + (Number(p.amount) || 0), 0) * 0.30).toFixed(2)} USD
+                      </span>
+                      <span className="metric-desc">Retained platform operations fee</span>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Transactions Table */}
               <div className="table-container">
                 <table className="premium-table">
                   <thead>
                     <tr>
-                      <th>Reference ID</th>
-                      <th>Paid By</th>
-                      <th>Amount</th>
-                      <th>Currency</th>
-                      <th>Status</th>
+                      <th>Transaction Ref</th>
+                      <th>Paid By (Student)</th>
+                      <th>Assignment Topic</th>
+                      <th>Amount Paid</th>
+                      <th>Date (Local)</th>
+                      <th>Payment Status</th>
+                      {user.role === 'ADMIN' && <th>Payout Status</th>}
+                      {user.role === 'ADMIN' && <th>Admin Actions</th>}
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td style={{ fontFamily: 'monospace', fontSize: '0.85rem' }}>pay_rzp_test_zldwmdv</td>
-                      <td>Alice (Student)</td>
-                      <td style={{ fontWeight: '700' }}>$150.00</td>
-                      <td>USD</td>
-                      <td><span className="badge badge-success">SUCCESS</span></td>
-                    </tr>
+                    {paymentsList
+                      .filter(p => 
+                        p.studentName?.toLowerCase().includes(paymentSearchQuery.toLowerCase()) || 
+                        p.studentEmail?.toLowerCase().includes(paymentSearchQuery.toLowerCase()) ||
+                        p.assignmentTitle?.toLowerCase().includes(paymentSearchQuery.toLowerCase()) ||
+                        p.providerPaymentId?.toLowerCase().includes(paymentSearchQuery.toLowerCase())
+                      )
+                      .map(p => (
+                        <tr key={p.id}>
+                          <td>
+                            <div style={{ fontFamily: 'monospace', fontSize: '0.8rem', fontWeight: '600', color: 'var(--text-primary)' }}>
+                              {p.providerPaymentId || 'pay_' + p.id.slice(0, 8)}
+                            </div>
+                            <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>
+                              via {p.provider || 'Razorpay'}
+                            </span>
+                          </td>
+                          <td>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                              <div className="user-avatar-circle" style={{ width: '28px', height: '28px', fontSize: '0.72rem' }}>
+                                {p.studentName?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'ST'}
+                              </div>
+                              <div>
+                                <div style={{ fontWeight: '600', fontSize: '0.84rem' }}>{p.studentName}</div>
+                                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{p.studentEmail}</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <div style={{ fontWeight: '500', fontSize: '0.84rem' }}>{p.assignmentTitle}</div>
+                            <span className="badge badge-info" style={{ fontSize: '0.65rem' }}>{p.subject || 'Academic'}</span>
+                          </td>
+                          <td>
+                            <span style={{ fontWeight: '700', color: 'var(--accent-success)', fontSize: '0.92rem' }}>
+                              ${Number(p.amount).toFixed(2)} {p.currency || 'USD'}
+                            </span>
+                          </td>
+                          <td style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                            {localizeTime(p.createdAt)}
+                          </td>
+                          <td>
+                            <span className="badge badge-success">
+                              ✓ {p.status || 'PAID'}
+                            </span>
+                          </td>
+                          {user.role === 'ADMIN' && (
+                            <td>
+                              <span className={`badge ${
+                                p.payoutStatus === 'RELEASED' ? 'badge-success' :
+                                p.payoutStatus === 'APPROVED' ? 'badge-info' : 'badge-pending'
+                              }`}>
+                                {p.payoutStatus === 'RELEASED' ? '✓ Released' :
+                                 p.payoutStatus === 'APPROVED' ? '⏳ Approved' : 'Pending Review'}
+                              </span>
+                            </td>
+                          )}
+                          {user.role === 'ADMIN' && (
+                            <td>
+                              <div style={{ display: 'flex', gap: '0.4rem' }}>
+                                {p.payoutStatus !== 'APPROVED' && p.payoutStatus !== 'RELEASED' && p.assignmentId && (
+                                  <button
+                                    type="button"
+                                    className="btn btn-secondary"
+                                    style={{ fontSize: '0.72rem', padding: '0.25rem 0.55rem' }}
+                                    onClick={() => handleApprovePayout(p.assignmentId)}
+                                    title="Approve 70% Expert Payout Share"
+                                  >
+                                    Approve Payout
+                                  </button>
+                                )}
+                                {p.payoutStatus === 'APPROVED' && p.assignmentId && (
+                                  <button
+                                    type="button"
+                                    className="btn btn-primary"
+                                    style={{ fontSize: '0.72rem', padding: '0.25rem 0.55rem' }}
+                                    onClick={() => handleReleasePayout(p.assignmentId)}
+                                    title="Release Funds & Close Task"
+                                  >
+                                    Release Funds
+                                  </button>
+                                )}
+                                {p.payoutStatus === 'RELEASED' && (
+                                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Completed</span>
+                                )}
+                              </div>
+                            </td>
+                          )}
+                        </tr>
+                      ))}
+                    {paymentsList.length === 0 && (
+                      <tr>
+                        <td colSpan={user.role === 'ADMIN' ? 8 : 6} style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--text-muted)' }}>
+                          No verified student payments recorded yet.
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -1764,20 +1968,126 @@ export default function App() {
             </div>
           )}
 
-          {/* VIEW: ADMIN REPORTS */}
+          {/* VIEW: ADMIN REPORTS - PLATFORM REVENUE & ACTIVITY */}
           {currentView === 'reports' && !activeAssignment && user.role === 'ADMIN' && (
             <div className="glass-panel" style={{ padding: '2rem' }}>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '1rem' }}>Platform Revenue & Activity Reports</h3>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginTop: '1.5rem' }}>
-                <div style={{ padding: '1.5rem', border: '1px solid var(--border-glass)', borderRadius: 'var(--radius-sm)' }}>
-                  <h4 style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Revenue Stats</h4>
-                  <span style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--accent-success)' }}>$150.00 USD</span>
-                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Total student payments captured</p>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <h3 style={{ fontSize: '1.25rem', fontWeight: '700', margin: 0 }}>Platform Revenue & Activity Reports</h3>
+                    <span className="badge badge-success" style={{ fontSize: '0.78rem', padding: '0.3rem 0.65rem' }}>
+                      📊 Executive Financial Summary
+                    </span>
+                  </div>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.35rem' }}>
+                    Real-time consolidated revenue generation, paid student count, expert payout allocations, and domain performance.
+                  </p>
                 </div>
-                <div style={{ padding: '1.5rem', border: '1px solid var(--border-glass)', borderRadius: 'var(--radius-sm)' }}>
-                  <h4 style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Completed Mentoring Hours</h4>
-                  <span style={{ fontSize: '1.5rem', fontWeight: '700' }}>0.5 Hours</span>
-                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Walkthrough sessions completed</p>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  style={{ fontSize: '0.8rem', padding: '0.45rem 0.85rem' }}
+                  onClick={() => { fetchRevenueReport(); fetchPayments(); }}
+                >
+                  🔄 Refresh Financial Data
+                </button>
+              </div>
+
+              {/* 4 Primary Financial KPI Cards */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+                <div className="metric-card" style={{ padding: '1.25rem', background: '#ffffff', borderLeft: '4px solid #10b981' }}>
+                  <span className="metric-label" style={{ fontSize: '0.74rem' }}>Total Revenue Generated</span>
+                  <span className="metric-value" style={{ fontSize: '1.75rem', color: '#059669', fontWeight: '800' }}>
+                    ${Number(revenueReport?.totalRevenueUSD || paymentsList.reduce((sum, p) => sum + (Number(p.amount) || 0), 0)).toFixed(2)} USD
+                  </span>
+                  <span className="metric-desc">Gross student deposit collections</span>
+                </div>
+
+                <div className="metric-card" style={{ padding: '1.25rem', background: '#ffffff', borderLeft: '4px solid var(--accent-primary)' }}>
+                  <span className="metric-label" style={{ fontSize: '0.74rem' }}>Students Paid Till Date</span>
+                  <span className="metric-value" style={{ fontSize: '1.75rem', color: 'var(--accent-primary)', fontWeight: '800' }}>
+                    {revenueReport?.totalPaidStudentsCount || new Set(paymentsList.map(p => p.studentId || p.studentEmail)).size} Students
+                  </span>
+                  <span className="metric-desc">Across {paymentsList.length} verified transactions</span>
+                </div>
+
+                <div className="metric-card" style={{ padding: '1.25rem', background: '#ffffff', borderLeft: '4px solid #6366f1' }}>
+                  <span className="metric-label" style={{ fontSize: '0.74rem' }}>Expert Payouts Share (70%)</span>
+                  <span className="metric-value" style={{ fontSize: '1.75rem', color: '#4f46e5', fontWeight: '800' }}>
+                    ${((Number(revenueReport?.totalRevenueUSD || paymentsList.reduce((sum, p) => sum + (Number(p.amount) || 0), 0))) * 0.70).toFixed(2)} USD
+                  </span>
+                  <span className="metric-desc">Tutor compensation pool</span>
+                </div>
+
+                <div className="metric-card" style={{ padding: '1.25rem', background: '#ffffff', borderLeft: '4px solid #f59e0b' }}>
+                  <span className="metric-label" style={{ fontSize: '0.74rem' }}>Net Platform Retained Margin (30%)</span>
+                  <span className="metric-value" style={{ fontSize: '1.75rem', color: '#d97706', fontWeight: '800' }}>
+                    ${((Number(revenueReport?.totalRevenueUSD || paymentsList.reduce((sum, p) => sum + (Number(p.amount) || 0), 0))) * 0.30).toFixed(2)} USD
+                  </span>
+                  <span className="metric-desc">Net operating margin retained</span>
+                </div>
+              </div>
+
+              {/* Breakdown by Academic Subject */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+                <div style={{ background: '#ffffff', padding: '1.5rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-glass)' }}>
+                  <h4 style={{ fontSize: '0.95rem', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '1rem' }}>
+                    📚 Revenue by Academic Domain / Subject
+                  </h4>
+                  {revenueReport?.revenueBySubject?.length > 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                      {revenueReport.revenueBySubject.map((item, idx) => {
+                        const totalRev = Number(revenueReport.totalRevenueUSD) || 1;
+                        const pct = Math.min(100, Math.round((Number(item.revenueUSD) / totalRev) * 100));
+                        return (
+                          <div key={idx}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', marginBottom: '0.3rem' }}>
+                              <span style={{ fontWeight: '600' }}>{item.subject}</span>
+                              <span style={{ color: 'var(--accent-success)', fontWeight: '700' }}>
+                                ${Number(item.revenueUSD).toFixed(2)} USD ({item.orderCount} orders)
+                              </span>
+                            </div>
+                            <div style={{ width: '100%', height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
+                              <div style={{ width: `${pct}%`, height: '100%', background: idx % 2 === 0 ? 'var(--accent-primary)' : '#10b981', borderRadius: '4px' }}></div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div style={{ textAlign: 'center', padding: '2rem 1rem', color: 'var(--text-muted)', fontSize: '0.84rem' }}>
+                      No subject-specific transaction data available yet.
+                    </div>
+                  )}
+                </div>
+
+                {/* Platform Activity Overview */}
+                <div style={{ background: '#ffffff', padding: '1.5rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-glass)' }}>
+                  <h4 style={{ fontSize: '0.95rem', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '1rem' }}>
+                    ⚡ Platform Academic Operations & Health
+                  </h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.6rem 0.8rem', background: '#f8fafc', borderRadius: 'var(--radius-sm)' }}>
+                      <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>Total Assignments Created:</span>
+                      <strong style={{ fontSize: '0.9rem' }}>{assignments.length} Cases</strong>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.6rem 0.8rem', background: '#f8fafc', borderRadius: 'var(--radius-sm)' }}>
+                      <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>Completed & Delivered Cases:</span>
+                      <strong style={{ fontSize: '0.9rem', color: '#059669' }}>
+                        {assignments.filter(a => ['COMPLETED', 'EXPLANATION_MEETING', 'DELIVERED', 'CLOSED'].includes(a.status)).length} Cases
+                      </strong>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.6rem 0.8rem', background: '#f8fafc', borderRadius: 'var(--radius-sm)' }}>
+                      <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>Active Workspaces in Progress:</span>
+                      <strong style={{ fontSize: '0.9rem', color: '#d97706' }}>
+                        {assignments.filter(a => ['IN_PROGRESS', 'REQUIREMENT_MEETING', 'REQUIREMENT_CONFIRMED', 'ASSIGNED', 'ADMIN_REVIEW'].includes(a.status)).length} Cases
+                      </strong>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.6rem 0.8rem', background: '#f8fafc', borderRadius: 'var(--radius-sm)' }}>
+                      <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>Average Price per Order:</span>
+                      <strong style={{ fontSize: '0.9rem', color: 'var(--accent-primary)' }}>$150.00 USD</strong>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

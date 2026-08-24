@@ -26,7 +26,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -66,6 +67,36 @@ public class PaymentController {
     public record VerifyPaymentRequest(UUID assignmentId, String razorpayPaymentId, String razorpayOrderId, String razorpaySignature) {}
     public record OrderResponse(String orderId, String keyId, int amount, String currency, UUID assignmentId) {}
     public record VerifyPaymentResponse(Payment payment, String message, String assignmentTitle) {}
+
+    public record PaymentDTO(
+            String id,
+            String assignmentId,
+            String assignmentTitle,
+            String subject,
+            String studentId,
+            String studentName,
+            String studentEmail,
+            BigDecimal amount,
+            String currency,
+            String provider,
+            String providerPaymentId,
+            String status,
+            Instant createdAt,
+            String payoutStatus
+    ) {}
+
+    public record SubjectRevenueDTO(String subject, long orderCount, BigDecimal revenueUSD) {}
+
+    public record RevenueReportDTO(
+            BigDecimal totalRevenueUSD,
+            long totalPaidStudentsCount,
+            long totalTransactionsCount,
+            BigDecimal expertPayoutsApprovedUSD,
+            BigDecimal expertPayoutsReleasedUSD,
+            BigDecimal netPlatformMarginUSD,
+            List<PaymentDTO> payments,
+            List<SubjectRevenueDTO> revenueBySubject
+    ) {}
 
     // Create Razorpay Order
     @PostMapping("/payments/create-order")
@@ -157,7 +188,7 @@ public class PaymentController {
                     .amount(new BigDecimal("150.00")) // Standard price
                     .currency("USD")
                     .provider("RAZORPAY")
-                    .providerPaymentId(req.razorpayPaymentId())
+                    .providerPaymentId(req.razorpayPaymentId() != null ? req.razorpayPaymentId() : "pay_" + UUID.randomUUID().toString().substring(0, 10))
                     .status(PaymentStatus.PAID)
                     .createdAt(Instant.now())
                     .updatedAt(Instant.now())
@@ -216,6 +247,154 @@ public class PaymentController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Payment processing failed: " + e.getMessage());
         }
+    }
+
+    // List all payments with student details
+    @GetMapping("/payments")
+    public ResponseEntity<List<PaymentDTO>> getPayments() {
+        User user = getAuthenticatedUser();
+        List<Payment> payments;
+        if (user.getRole() == UserRole.ADMIN) {
+            payments = paymentRepository.findAll();
+        } else if (user.getRole() == UserRole.STUDENT) {
+            payments = paymentRepository.findByStudentId(user.getId());
+        } else {
+            List<UUID> assignmentIds = assignmentRepository.findByExpertId(user.getId()).stream()
+                    .map(Assignment::getId)
+                    .collect(Collectors.toList());
+            payments = paymentRepository.findAll().stream()
+                    .filter(p -> assignmentIds.contains(p.getAssignmentId()))
+                    .collect(Collectors.toList());
+        }
+
+        List<PaymentDTO> dtos = payments.stream()
+                .sorted((a, b) -> {
+                    if (a.getCreatedAt() == null) return 1;
+                    if (b.getCreatedAt() == null) return -1;
+                    return b.getCreatedAt().compareTo(a.getCreatedAt());
+                })
+                .map(this::mapToPaymentDTO)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(dtos);
+    }
+
+    // Revenue and Activity Reports for Admin
+    @GetMapping("/reports/revenue")
+    public ResponseEntity<RevenueReportDTO> getRevenueReport() {
+        User user = getAuthenticatedUser();
+        if (user.getRole() != UserRole.ADMIN) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        List<Payment> allPayments = paymentRepository.findAll().stream()
+                .filter(p -> p.getStatus() == PaymentStatus.PAID)
+                .collect(Collectors.toList());
+
+        BigDecimal totalRevenue = allPayments.stream()
+                .map(Payment::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        long paidStudentsCount = allPayments.stream()
+                .map(Payment::getStudentId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .count();
+
+        long totalTransactions = allPayments.size();
+
+        List<ExpertPayout> allPayouts = payoutRepository.findAll();
+        BigDecimal payoutsApproved = allPayouts.stream()
+                .filter(p -> p.getStatus() == ExpertPayoutStatus.APPROVED)
+                .map(ExpertPayout::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal payoutsReleased = allPayouts.stream()
+                .filter(p -> p.getStatus() == ExpertPayoutStatus.RELEASED)
+                .map(ExpertPayout::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal platformMargin = totalRevenue.multiply(new BigDecimal("0.30"));
+
+        List<PaymentDTO> paymentDTOs = allPayments.stream()
+                .sorted((a, b) -> {
+                    if (a.getCreatedAt() == null) return 1;
+                    if (b.getCreatedAt() == null) return -1;
+                    return b.getCreatedAt().compareTo(a.getCreatedAt());
+                })
+                .map(this::mapToPaymentDTO)
+                .collect(Collectors.toList());
+
+        Map<String, List<PaymentDTO>> bySubject = paymentDTOs.stream()
+                .collect(Collectors.groupingBy(p -> p.subject() != null && !p.subject().isEmpty() ? p.subject() : "General Studies"));
+
+        List<SubjectRevenueDTO> subjectRevenues = bySubject.entrySet().stream()
+                .map(entry -> {
+                    BigDecimal subTotal = entry.getValue().stream()
+                            .map(PaymentDTO::amount)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    return new SubjectRevenueDTO(entry.getKey(), entry.getValue().size(), subTotal);
+                })
+                .sorted((a, b) -> b.revenueUSD().compareTo(a.revenueUSD()))
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(new RevenueReportDTO(
+                totalRevenue,
+                paidStudentsCount,
+                totalTransactions,
+                payoutsApproved,
+                payoutsReleased,
+                platformMargin,
+                paymentDTOs,
+                subjectRevenues
+        ));
+    }
+
+    private PaymentDTO mapToPaymentDTO(Payment p) {
+        String studentName = "Student";
+        String studentEmail = "";
+        if (p.getStudentId() != null) {
+            Optional<User> studentOpt = userRepository.findById(p.getStudentId());
+            if (studentOpt.isPresent()) {
+                studentName = studentOpt.get().getName();
+                studentEmail = studentOpt.get().getEmail();
+            }
+        }
+
+        String assignmentTitle = "Academic Tutoring Case";
+        String subject = "Computer Science";
+        if (p.getAssignmentId() != null) {
+            Optional<Assignment> assignOpt = assignmentRepository.findById(p.getAssignmentId());
+            if (assignOpt.isPresent()) {
+                assignmentTitle = assignOpt.get().getTitle();
+                subject = assignOpt.get().getSubject();
+            }
+        }
+
+        String payoutStatus = "PENDING_ASSIGNMENT";
+        if (p.getAssignmentId() != null) {
+            Optional<ExpertPayout> payoutOpt = payoutRepository.findByAssignmentId(p.getAssignmentId());
+            if (payoutOpt.isPresent()) {
+                payoutStatus = payoutOpt.get().getStatus().name();
+            }
+        }
+
+        return new PaymentDTO(
+                p.getId().toString(),
+                p.getAssignmentId() != null ? p.getAssignmentId().toString() : "",
+                assignmentTitle,
+                subject,
+                p.getStudentId() != null ? p.getStudentId().toString() : "",
+                studentName,
+                studentEmail,
+                p.getAmount(),
+                p.getCurrency() != null ? p.getCurrency() : "USD",
+                p.getProvider() != null ? p.getProvider() : "RAZORPAY",
+                p.getProviderPaymentId() != null ? p.getProviderPaymentId() : "pay_" + p.getId().toString().substring(0, 8),
+                p.getStatus() != null ? p.getStatus().name() : "PAID",
+                p.getCreatedAt() != null ? p.getCreatedAt() : Instant.now(),
+                payoutStatus
+        );
     }
 
     // Admin approves expert payout
