@@ -68,7 +68,6 @@ You can log in instantly using the **1-Click Login by Role** buttons on the sign
 | **🎓 Student** | `priya@test.com` | `password123` | Priya Sharma — MS Applications & Mentorship |
 | **🎓 Student** | `sweety@gmail.com` | `password123` | Seety — University Selection & Tutoring |
 | **🎓 Student** | `harsha@gmail.com` | `password123` | Harsha — Mock Interview & Tutoring |
-| **🎓 Student** | `avusulaharshitha1701@gmail.com` | `password123` | Harshitha Avusula — Cloud Architecture Session |
 | **🎓 Student** | `student@test1.com` | `password123` | Pavan — Docker & Web Development |
 | **🔬 Expert** | `expert@test.com` | `password123` | Dr. Smith — Lead Academic Mentor & Tutor |
 | **🛡️ Admin** | `admin@test.com` | `password123` | Bob (Admin) — Platform Supervisor & Operations |
