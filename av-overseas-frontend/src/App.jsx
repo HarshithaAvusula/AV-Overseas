@@ -1791,29 +1791,29 @@ export default function App() {
               </div>
 
               {/* Compact Stat Cards Row (Height & Size Reduced) */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.85rem', marginBottom: '1.25rem' }}>
-                <div className="metric-card" style={{ padding: '0.85rem 1.1rem', background: '#ffffff', borderLeft: '4px solid var(--accent-primary)', minHeight: 'auto' }}>
-                  <span className="metric-label" style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Total Students</span>
-                  <span className="metric-value" style={{ fontSize: '1.35rem', color: 'var(--accent-primary)', fontWeight: '800', marginTop: '0.2rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '0.65rem', marginBottom: '1rem' }}>
+                <div className="metric-card" style={{ padding: '0.65rem 0.85rem', background: '#ffffff', borderLeft: '3px solid var(--accent-primary)', minHeight: 'auto' }}>
+                  <span className="metric-label" style={{ fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Total Students</span>
+                  <span className="metric-value" style={{ fontSize: '1.2rem', color: 'var(--accent-primary)', fontWeight: '800', marginTop: '0.15rem' }}>
                     {Array.isArray(studentsList) ? studentsList.length : 0}
                   </span>
-                  <span className="metric-desc" style={{ fontSize: '0.7rem', marginTop: '0.15rem' }}>Registered accounts</span>
+                  <span className="metric-desc" style={{ fontSize: '0.66rem', marginTop: '0.1rem' }}>Registered accounts</span>
                 </div>
 
-                <div className="metric-card" style={{ padding: '0.85rem 1.1rem', background: '#ffffff', borderLeft: '4px solid #10b981', minHeight: 'auto' }}>
-                  <span className="metric-label" style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Total Orders Placed</span>
-                  <span className="metric-value" style={{ fontSize: '1.35rem', color: '#059669', fontWeight: '800', marginTop: '0.2rem' }}>
+                <div className="metric-card" style={{ padding: '0.65rem 0.85rem', background: '#ffffff', borderLeft: '3px solid #10b981', minHeight: 'auto' }}>
+                  <span className="metric-label" style={{ fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Total Orders Placed</span>
+                  <span className="metric-value" style={{ fontSize: '1.2rem', color: '#059669', fontWeight: '800', marginTop: '0.15rem' }}>
                     {Array.isArray(studentsList) ? studentsList.reduce((sum, s) => sum + (s.totalOrders || 0), 0) : 0}
                   </span>
-                  <span className="metric-desc" style={{ fontSize: '0.7rem', marginTop: '0.15rem' }}>Across all student profiles</span>
+                  <span className="metric-desc" style={{ fontSize: '0.66rem', marginTop: '0.1rem' }}>Across all student profiles</span>
                 </div>
 
-                <div className="metric-card" style={{ padding: '0.85rem 1.1rem', background: '#ffffff', borderLeft: '4px solid #f59e0b', minHeight: 'auto' }}>
-                  <span className="metric-label" style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Active Workspaces</span>
-                  <span className="metric-value" style={{ fontSize: '1.35rem', color: '#d97706', fontWeight: '800', marginTop: '0.2rem' }}>
+                <div className="metric-card" style={{ padding: '0.65rem 0.85rem', background: '#ffffff', borderLeft: '3px solid #f59e0b', minHeight: 'auto' }}>
+                  <span className="metric-label" style={{ fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Active Workspaces</span>
+                  <span className="metric-value" style={{ fontSize: '1.2rem', color: '#d97706', fontWeight: '800', marginTop: '0.15rem' }}>
                     {Array.isArray(studentsList) ? studentsList.reduce((sum, s) => sum + (s.activeOrders || 0), 0) : 0}
                   </span>
-                  <span className="metric-desc" style={{ fontSize: '0.7rem', marginTop: '0.15rem' }}>In-progress tutoring orders</span>
+                  <span className="metric-desc" style={{ fontSize: '0.66rem', marginTop: '0.1rem' }}>In-progress tutoring orders</span>
                 </div>
               </div>
 
@@ -1822,12 +1822,12 @@ export default function App() {
                 <table className="premium-table" style={{ margin: 0 }}>
                   <thead>
                     <tr>
-                      <th style={{ padding: '0.75rem 1rem' }}>Student Profile</th>
-                      <th style={{ padding: '0.75rem 1rem' }}>Email Address</th>
-                      <th style={{ padding: '0.75rem 1rem' }}>Registered Till Date</th>
-                      <th style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>Total Orders</th>
-                      <th style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>Active Projects</th>
-                      <th style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>Account Status</th>
+                      <th style={{ padding: '0.65rem 1rem' }}>Student Profile</th>
+                      <th style={{ padding: '0.65rem 1rem' }}>Email Address</th>
+                      <th style={{ padding: '0.65rem 1rem' }}>Registered Till Date</th>
+                      <th style={{ padding: '0.65rem 1rem', textAlign: 'center' }}>Total Orders</th>
+                      <th style={{ padding: '0.65rem 1rem', textAlign: 'center' }}>Active Projects</th>
+                      <th style={{ padding: '0.65rem 1rem', textAlign: 'center' }}>Account Status</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1839,44 +1839,44 @@ export default function App() {
                       )
                       .map(s => (
                         <tr key={s.id || s.email} style={{ transition: 'background 0.15s ease' }}>
-                          <td style={{ padding: '0.75rem 1rem' }}>
+                          <td style={{ padding: '0.65rem 1rem' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                              <div className="user-avatar-circle" style={{ width: '32px', height: '32px', fontSize: '0.75rem', fontWeight: '700' }}>
+                              <div className="user-avatar-circle" style={{ width: '30px', height: '30px', fontSize: '0.72rem', fontWeight: '700' }}>
                                 {s?.name ? s.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'ST'}
                               </div>
                               <div>
-                                <div style={{ fontWeight: '700', color: 'var(--text-primary)', fontSize: '0.86rem' }}>
+                                <div style={{ fontWeight: '700', color: 'var(--text-primary)', fontSize: '0.84rem' }}>
                                   {s?.name || 'Student'}
                                 </div>
-                                <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
+                                <div style={{ fontSize: '0.66rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
                                   ID: {s?.id ? (s.id.length > 8 ? s.id.slice(0, 8) + '...' : s.id) : 'ST-USER'}
                                 </div>
                               </div>
                             </div>
                           </td>
-                          <td style={{ padding: '0.75rem 1rem', color: 'var(--text-secondary)', fontSize: '0.84rem' }}>
+                          <td style={{ padding: '0.65rem 1rem', color: 'var(--text-secondary)', fontSize: '0.82rem' }}>
                             {s?.email}
                           </td>
-                          <td style={{ padding: '0.75rem 1rem', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                          <td style={{ padding: '0.65rem 1rem', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                             {localizeTime(s?.createdAt)}
                           </td>
-                          <td style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>
-                            <span className="badge badge-info" style={{ fontWeight: '600', fontSize: '0.75rem' }}>
+                          <td style={{ padding: '0.65rem 1rem', textAlign: 'center' }}>
+                            <span className="badge badge-info" style={{ fontWeight: '600', fontSize: '0.7rem', padding: '0.15rem 0.45rem' }}>
                               {s?.totalOrders || 0} orders
                             </span>
                           </td>
-                          <td style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>
+                          <td style={{ padding: '0.65rem 1rem', textAlign: 'center' }}>
                             {(s?.activeOrders || 0) > 0 ? (
-                              <span className="badge badge-pending" style={{ fontWeight: '600', fontSize: '0.75rem' }}>
+                              <span className="badge badge-pending" style={{ fontWeight: '600', fontSize: '0.7rem', padding: '0.15rem 0.45rem' }}>
                                 {s.activeOrders} active
                               </span>
                             ) : (
-                              <span style={{ fontSize: '0.76rem', color: 'var(--text-muted)' }}>None</span>
+                              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>None</span>
                             )}
                           </td>
-                          <td style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>
-                            <span className="badge badge-success" style={{ fontWeight: '600', fontSize: '0.75rem' }}>
-                              ACTIVE STUDENT
+                          <td style={{ padding: '0.65rem 1rem', textAlign: 'center' }}>
+                            <span className="badge badge-success" style={{ fontWeight: '600', fontSize: '0.7rem', padding: '0.15rem 0.45rem' }}>
+                              ACTIVE
                             </span>
                           </td>
                         </tr>
@@ -1886,7 +1886,7 @@ export default function App() {
                       (s?.email || '').toLowerCase().includes(studentSearchQuery.toLowerCase())
                     ).length === 0 && (
                       <tr>
-                        <td colSpan="6" style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                        <td colSpan="6" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', fontSize: '0.82rem' }}>
                           No registered students found matching your search.
                         </td>
                       </tr>
@@ -1968,39 +1968,39 @@ export default function App() {
               </div>
 
               {/* 4 Compact Stat Cards (Height & Size Reduced, Zero Redundancy) */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '0.85rem', marginBottom: '1.25rem' }}>
-                <div className="metric-card" style={{ padding: '0.85rem 1.1rem', background: '#ffffff', borderLeft: '4px solid #10b981', minHeight: 'auto' }}>
-                  <span className="metric-label" style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Students Paid</span>
-                  <span className="metric-value" style={{ fontSize: '1.35rem', color: '#059669', fontWeight: '800', marginTop: '0.2rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '0.65rem', marginBottom: '1rem' }}>
+                <div className="metric-card" style={{ padding: '0.65rem 0.85rem', background: '#ffffff', borderLeft: '3px solid #10b981', minHeight: 'auto' }}>
+                  <span className="metric-label" style={{ fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Students Paid</span>
+                  <span className="metric-value" style={{ fontSize: '1.2rem', color: '#059669', fontWeight: '800', marginTop: '0.15rem' }}>
                     {new Set((Array.isArray(paymentsList) ? paymentsList : []).map(p => p.studentId || p.studentEmail)).size} Students
                   </span>
-                  <span className="metric-desc" style={{ fontSize: '0.7rem', marginTop: '0.15rem' }}>Distinct paying student accounts</span>
+                  <span className="metric-desc" style={{ fontSize: '0.66rem', marginTop: '0.1rem' }}>Distinct paying accounts</span>
                 </div>
 
-                <div className="metric-card" style={{ padding: '0.85rem 1.1rem', background: '#ffffff', borderLeft: '4px solid var(--accent-primary)', minHeight: 'auto' }}>
-                  <span className="metric-label" style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Total Revenue</span>
-                  <span className="metric-value" style={{ fontSize: '1.35rem', color: 'var(--accent-primary)', fontWeight: '800', marginTop: '0.2rem' }}>
+                <div className="metric-card" style={{ padding: '0.65rem 0.85rem', background: '#ffffff', borderLeft: '3px solid var(--accent-primary)', minHeight: 'auto' }}>
+                  <span className="metric-label" style={{ fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Total Revenue</span>
+                  <span className="metric-value" style={{ fontSize: '1.2rem', color: 'var(--accent-primary)', fontWeight: '800', marginTop: '0.15rem' }}>
                     ${(Array.isArray(paymentsList) ? paymentsList : []).reduce((sum, p) => sum + (Number(p.amount) || 0), 0).toFixed(2)} USD
                   </span>
-                  <span className="metric-desc" style={{ fontSize: '0.7rem', marginTop: '0.15rem' }}>Gross tutoring deposits captured</span>
+                  <span className="metric-desc" style={{ fontSize: '0.66rem', marginTop: '0.1rem' }}>Gross tutoring deposits</span>
                 </div>
 
-                <div className="metric-card" style={{ padding: '0.85rem 1.1rem', background: '#ffffff', borderLeft: '4px solid #6366f1', minHeight: 'auto' }}>
-                  <span className="metric-label" style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Average Order Value</span>
-                  <span className="metric-value" style={{ fontSize: '1.35rem', color: '#4f46e5', fontWeight: '800', marginTop: '0.2rem' }}>
+                <div className="metric-card" style={{ padding: '0.65rem 0.85rem', background: '#ffffff', borderLeft: '3px solid #6366f1', minHeight: 'auto' }}>
+                  <span className="metric-label" style={{ fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Average Order Value</span>
+                  <span className="metric-value" style={{ fontSize: '1.2rem', color: '#4f46e5', fontWeight: '800', marginTop: '0.15rem' }}>
                     ${(Array.isArray(paymentsList) ? paymentsList : []).length > 0
                       ? ((Array.isArray(paymentsList) ? paymentsList : []).reduce((sum, p) => sum + (Number(p.amount) || 0), 0) / paymentsList.length).toFixed(2)
                       : '0.00'} USD
                   </span>
-                  <span className="metric-desc" style={{ fontSize: '0.7rem', marginTop: '0.15rem' }}>Average spend per booking</span>
+                  <span className="metric-desc" style={{ fontSize: '0.66rem', marginTop: '0.1rem' }}>Average per booking</span>
                 </div>
 
-                <div className="metric-card" style={{ padding: '0.85rem 1.1rem', background: '#ffffff', borderLeft: '4px solid #f59e0b', minHeight: 'auto' }}>
-                  <span className="metric-label" style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Pending Payments</span>
-                  <span className="metric-value" style={{ fontSize: '1.35rem', color: '#d97706', fontWeight: '800', marginTop: '0.2rem' }}>
+                <div className="metric-card" style={{ padding: '0.65rem 0.85rem', background: '#ffffff', borderLeft: '3px solid #f59e0b', minHeight: 'auto' }}>
+                  <span className="metric-label" style={{ fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Pending Payments</span>
+                  <span className="metric-value" style={{ fontSize: '1.2rem', color: '#d97706', fontWeight: '800', marginTop: '0.15rem' }}>
                     {(Array.isArray(assignments) ? assignments : []).filter(a => a.status === 'PENDING_PAYMENT').length} Orders
                   </span>
-                  <span className="metric-desc" style={{ fontSize: '0.7rem', marginTop: '0.15rem' }}>Awaiting student checkout</span>
+                  <span className="metric-desc" style={{ fontSize: '0.66rem', marginTop: '0.1rem' }}>Awaiting checkout</span>
                 </div>
               </div>
 
@@ -2009,13 +2009,13 @@ export default function App() {
                 <table className="premium-table" style={{ margin: 0 }}>
                   <thead>
                     <tr>
-                      <th style={{ padding: '0.75rem 1rem' }}>Transaction ID</th>
-                      <th style={{ padding: '0.75rem 1rem' }}>Student Details</th>
-                      <th style={{ padding: '0.75rem 1rem' }}>Assignment / Course</th>
-                      <th style={{ padding: '0.75rem 1rem', textAlign: 'right' }}>Amount Paid</th>
-                      <th style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>Payment Date</th>
-                      <th style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>Gateway Status</th>
-                      <th style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>Action</th>
+                      <th style={{ padding: '0.65rem 1rem' }}>Transaction ID</th>
+                      <th style={{ padding: '0.65rem 1rem' }}>Student Details</th>
+                      <th style={{ padding: '0.65rem 1rem' }}>Assignment</th>
+                      <th style={{ padding: '0.65rem 1rem', textAlign: 'right' }}>Amount Paid</th>
+                      <th style={{ padding: '0.65rem 1rem', textAlign: 'center' }}>Payment Date</th>
+                      <th style={{ padding: '0.65rem 1rem', textAlign: 'center' }}>Gateway Status</th>
+                      <th style={{ padding: '0.65rem 1rem', textAlign: 'center' }}>Action</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -2048,15 +2048,15 @@ export default function App() {
                       })
                       .map(p => (
                         <tr key={p.id || p.providerPaymentId} style={{ transition: 'background 0.15s ease' }}>
-                          <td style={{ padding: '0.75rem 1rem' }}>
+                          <td style={{ padding: '0.65rem 1rem' }}>
                             <div style={{ fontFamily: 'monospace', fontSize: '0.82rem', fontWeight: '700', color: 'var(--text-primary)' }}>
                               {p.providerPaymentId || (p.id ? 'pay_' + p.id.slice(0, 8) : 'pay_live_001')}
                             </div>
-                            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                            <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>
                               via {p.provider || 'Razorpay'}
                             </span>
                           </td>
-                          <td style={{ padding: '0.75rem 1rem' }}>
+                          <td style={{ padding: '0.65rem 1rem' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                               <div className="user-avatar-circle" style={{ width: '28px', height: '28px', fontSize: '0.72rem', fontWeight: '700' }}>
                                 {p?.studentName ? p.studentName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'ST'}
@@ -2067,32 +2067,29 @@ export default function App() {
                               </div>
                             </div>
                           </td>
-                          <td style={{ padding: '0.75rem 1rem' }}>
+                          <td style={{ padding: '0.65rem 1rem' }}>
                             <div style={{ fontWeight: '600', fontSize: '0.84rem', color: 'var(--text-primary)' }}>
-                              {p?.assignmentTitle || 'Mentorship Order'}
+                              {p?.assignmentTitle || p?.subject || 'Mentorship Order'}
                             </div>
-                            <span className="badge badge-info" style={{ fontSize: '0.68rem', marginTop: '0.2rem' }}>
-                              {p?.subject || 'Academic Tutoring'}
-                            </span>
                           </td>
-                          <td style={{ padding: '0.75rem 1rem', textAlign: 'right' }}>
-                            <span style={{ fontWeight: '800', color: '#059669', fontSize: '0.92rem' }}>
+                          <td style={{ padding: '0.65rem 1rem', textAlign: 'right' }}>
+                            <span style={{ fontWeight: '800', color: '#059669', fontSize: '0.9rem' }}>
                               ${Number(p?.amount || 0).toFixed(2)} {p?.currency || 'USD'}
                             </span>
                           </td>
-                          <td style={{ padding: '0.75rem 1rem', fontSize: '0.8rem', color: 'var(--text-secondary)', textAlign: 'center' }}>
+                          <td style={{ padding: '0.65rem 1rem', fontSize: '0.78rem', color: 'var(--text-secondary)', textAlign: 'center' }}>
                             {localizeTime(p?.createdAt)}
                           </td>
-                          <td style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>
-                            <span className="badge badge-success" style={{ fontWeight: '700', fontSize: '0.75rem' }}>
+                          <td style={{ padding: '0.65rem 1rem', textAlign: 'center' }}>
+                            <span className="badge badge-success" style={{ fontWeight: '700', fontSize: '0.72rem', padding: '0.18rem 0.45rem' }}>
                               ✓ {p?.status || 'PAID'}
                             </span>
                           </td>
-                          <td style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>
+                          <td style={{ padding: '0.65rem 1rem', textAlign: 'center' }}>
                             <button
                               type="button"
                               className="btn btn-secondary"
-                              style={{ fontSize: '0.75rem', padding: '0.35rem 0.65rem', fontWeight: '600' }}
+                              style={{ fontSize: '0.72rem', padding: '0.28rem 0.55rem', fontWeight: '600' }}
                               onClick={() => setSelectedPayment(p)}
                             >
                               👁️ View Details
@@ -2102,7 +2099,7 @@ export default function App() {
                       ))}
                     {(Array.isArray(paymentsList) ? paymentsList : []).length === 0 && (
                       <tr>
-                        <td colSpan="7" style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                        <td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', fontSize: '0.82rem' }}>
                           No verified student payments recorded yet.
                         </td>
                       </tr>
