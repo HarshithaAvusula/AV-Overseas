@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: av_overseas_postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: av_user
+      POSTGRES_PASSWORD: av_password
+      POSTGRES_DB: av_overseas_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
