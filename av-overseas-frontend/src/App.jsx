@@ -2004,18 +2004,15 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Prominent Payment Transactions Table */}
+              {/* Minimal & Professional Payment Transactions Table (4 Columns Only) */}
               <div className="table-container" style={{ border: '1px solid var(--border-glass)', borderRadius: 'var(--radius-md)', background: '#ffffff' }}>
-                <table className="premium-table" style={{ margin: 0 }}>
+                <table className="premium-table" style={{ margin: 0, width: '100%' }}>
                   <thead>
                     <tr>
-                      <th style={{ padding: '0.65rem 1rem' }}>Transaction ID</th>
-                      <th style={{ padding: '0.65rem 1rem' }}>Student Details</th>
-                      <th style={{ padding: '0.65rem 1rem' }}>Assignment</th>
-                      <th style={{ padding: '0.65rem 1rem', textAlign: 'right' }}>Amount Paid</th>
-                      <th style={{ padding: '0.65rem 1rem', textAlign: 'center' }}>Payment Date</th>
-                      <th style={{ padding: '0.65rem 1rem', textAlign: 'center' }}>Gateway Status</th>
-                      <th style={{ padding: '0.65rem 1rem', textAlign: 'center' }}>Action</th>
+                      <th style={{ padding: '0.8rem 1.25rem' }}>Student</th>
+                      <th style={{ padding: '0.8rem 1.25rem' }}>Course / Assignment</th>
+                      <th style={{ padding: '0.8rem 1.25rem', textAlign: 'right' }}>Amount Paid</th>
+                      <th style={{ padding: '0.8rem 1.25rem', textAlign: 'center', width: '140px' }}>Action</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -2048,58 +2045,58 @@ export default function App() {
                       })
                       .map(p => (
                         <tr key={p.id || p.providerPaymentId} style={{ transition: 'background 0.15s ease' }}>
-                          <td style={{ padding: '0.65rem 1rem' }}>
-                            <div style={{ fontFamily: 'monospace', fontSize: '0.82rem', fontWeight: '700', color: 'var(--text-primary)' }}>
-                              {p.providerPaymentId || (p.id ? 'pay_' + p.id.slice(0, 8) : 'pay_live_001')}
-                            </div>
-                            <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>
-                              via {p.provider || 'Razorpay'}
-                            </span>
-                          </td>
-                          <td style={{ padding: '0.65rem 1rem' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                              <div className="user-avatar-circle" style={{ width: '28px', height: '28px', fontSize: '0.72rem', fontWeight: '700' }}>
+                          {/* 1. Student (Avatar + Name only) */}
+                          <td style={{ padding: '0.8rem 1.25rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                              <div className="user-avatar-circle" style={{ width: '30px', height: '30px', fontSize: '0.72rem', fontWeight: '700' }}>
                                 {p?.studentName ? p.studentName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'ST'}
                               </div>
-                              <div>
-                                <div style={{ fontWeight: '700', fontSize: '0.84rem', color: 'var(--text-primary)' }}>{p?.studentName || 'Student'}</div>
-                                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{p?.studentEmail}</div>
-                              </div>
+                              <span style={{ fontWeight: '700', fontSize: '0.88rem', color: 'var(--text-primary)' }}>
+                                {p?.studentName || 'Student'}
+                              </span>
                             </div>
                           </td>
-                          <td style={{ padding: '0.65rem 1rem' }}>
-                            <div style={{ fontWeight: '600', fontSize: '0.84rem', color: 'var(--text-primary)' }}>
+
+                          {/* 2. Course / Assignment (Neatly truncated) */}
+                          <td style={{ padding: '0.8rem 1.25rem', maxWidth: '340px' }}>
+                            <div
+                              style={{
+                                fontWeight: '600',
+                                fontSize: '0.85rem',
+                                color: 'var(--text-primary)',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis'
+                              }}
+                              title={p?.assignmentTitle || p?.subject || 'Mentorship Order'}
+                            >
                               {p?.assignmentTitle || p?.subject || 'Mentorship Order'}
                             </div>
                           </td>
-                          <td style={{ padding: '0.65rem 1rem', textAlign: 'right' }}>
-                            <span style={{ fontWeight: '800', color: '#059669', fontSize: '0.9rem' }}>
-                              ${Number(p?.amount || 0).toFixed(2)} {p?.currency || 'USD'}
+
+                          {/* 3. Amount Paid (Visually Prominent) */}
+                          <td style={{ padding: '0.8rem 1.25rem', textAlign: 'right' }}>
+                            <span style={{ fontWeight: '800', color: '#059669', fontSize: '0.92rem' }}>
+                              ${Number(p?.amount || 0).toFixed(0)} {p?.currency || 'USD'}
                             </span>
                           </td>
-                          <td style={{ padding: '0.65rem 1rem', fontSize: '0.78rem', color: 'var(--text-secondary)', textAlign: 'center' }}>
-                            {localizeTime(p?.createdAt)}
-                          </td>
-                          <td style={{ padding: '0.65rem 1rem', textAlign: 'center' }}>
-                            <span className="badge badge-success" style={{ fontWeight: '700', fontSize: '0.72rem', padding: '0.18rem 0.45rem' }}>
-                              ✓ {p?.status || 'PAID'}
-                            </span>
-                          </td>
-                          <td style={{ padding: '0.65rem 1rem', textAlign: 'center' }}>
+
+                          {/* 4. Action */}
+                          <td style={{ padding: '0.8rem 1.25rem', textAlign: 'center' }}>
                             <button
                               type="button"
                               className="btn btn-secondary"
-                              style={{ fontSize: '0.72rem', padding: '0.28rem 0.55rem', fontWeight: '600' }}
+                              style={{ fontSize: '0.75rem', padding: '0.35rem 0.75rem', fontWeight: '600' }}
                               onClick={() => setSelectedPayment(p)}
                             >
-                              👁️ View Details
+                              View Details
                             </button>
                           </td>
                         </tr>
                       ))}
                     {(Array.isArray(paymentsList) ? paymentsList : []).length === 0 && (
                       <tr>
-                        <td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', fontSize: '0.82rem' }}>
+                        <td colSpan="4" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', fontSize: '0.82rem' }}>
                           No verified student payments recorded yet.
                         </td>
                       </tr>
