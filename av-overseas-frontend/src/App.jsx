@@ -107,7 +107,7 @@ export default function App() {
           id: payload.userId,
           email: payload.sub,
           role: payload.role,
-          name: payload.role === 'STUDENT' ? 'Alice (Student)' : payload.role === 'EXPERT' ? 'Dr. Smith (Expert)' : 'Bob (Admin)'
+          name: payload.name || payload.sub?.split('@')[0] || (payload.role === 'STUDENT' ? 'Student' : payload.role === 'EXPERT' ? 'Expert' : 'Admin')
         });
       } catch (e) {
         logout();
@@ -204,6 +204,12 @@ export default function App() {
         const data = await res.json();
         setToken(data.token);
         localStorage.setItem('token', data.token);
+        setUser({
+          id: data.id,
+          email: data.email,
+          role: data.role,
+          name: data.name
+        });
       } else {
         const text = await res.text();
         setErrorMsg(text || 'Authentication Failed');
@@ -224,7 +230,7 @@ export default function App() {
       });
       if (res.ok) {
         setIsRegistering(false);
-        setErrorMsg('Registration successful. Log in now!');
+        setErrorMsg('Registration successful! Please sign in with your email and password.');
       } else {
         const text = await res.text();
         setErrorMsg(text || 'Registration Failed');
@@ -253,6 +259,12 @@ export default function App() {
         const data = await res.json();
         setToken(data.token);
         localStorage.setItem('token', data.token);
+        setUser({
+          id: data.id,
+          email: data.email,
+          role: data.role,
+          name: data.name
+        });
         setActiveAssignment(null);
         setCurrentView('dashboard');
       }
@@ -1864,7 +1876,7 @@ export default function App() {
                             <div className="video-feed">
                               <div className="video-avatar">{user.role === 'STUDENT' ? 'ES' : 'ST'}</div>
                               <span style={{ fontSize: '0.9rem', fontWeight: '600' }}>
-                                {user.role === 'STUDENT' ? 'Dr. Smith (Expert)' : 'Alice (Student)'}
+                                {user.role === 'STUDENT' ? 'Assigned Expert Tutor' : user.name}
                               </span>
                               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
                                 Link: <a href={meet.meetingLink} target="_blank" rel="noreferrer" style={{ color: 'var(--accent-info)' }}>{meet.meetingLink}</a>
@@ -2034,7 +2046,7 @@ export default function App() {
                             <div className="video-feed">
                               <div className="video-avatar">{user.role === 'STUDENT' ? 'ES' : 'ST'}</div>
                               <span style={{ fontSize: '0.9rem', fontWeight: '600' }}>
-                                {user.role === 'STUDENT' ? 'Dr. Smith (Expert)' : 'Alice (Student)'}
+                                {user.role === 'STUDENT' ? 'Assigned Expert Tutor' : user.name}
                               </span>
                               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                                 Link: <a href={meet.meetingLink} target="_blank" rel="noreferrer" style={{ color: 'var(--accent-info)' }}>{meet.meetingLink}</a>

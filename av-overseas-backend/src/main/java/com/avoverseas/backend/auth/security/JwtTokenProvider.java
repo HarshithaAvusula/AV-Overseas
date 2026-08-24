@@ -27,17 +27,26 @@ public class JwtTokenProvider {
     }
 
     public String generateToken(String email, String role, String userId) {
+        return generateToken(email, role, userId, null);
+    }
+
+    public String generateToken(String email, String role, String userId, String name) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
 
-        return Jwts.builder()
+        JwtBuilder builder = Jwts.builder()
                 .subject(email)
                 .claim("role", role)
                 .claim("userId", userId)
                 .issuedAt(now)
                 .expiration(expiryDate)
-                .signWith(getSigningKey())
-                .compact();
+                .signWith(getSigningKey());
+
+        if (name != null && !name.isEmpty()) {
+            builder.claim("name", name);
+        }
+
+        return builder.compact();
     }
 
     public String getEmailFromJwt(String token) {
