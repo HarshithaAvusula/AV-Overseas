@@ -67,6 +67,8 @@ export default function App() {
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [expertsList, setExpertsList] = useState([]);
+  const [studentsList, setStudentsList] = useState([]);
+  const [studentSearchQuery, setStudentSearchQuery] = useState('');
   
   // Custom slots variables
   const [selectedExpertId, setSelectedExpertId] = useState('');
@@ -133,11 +135,14 @@ export default function App() {
       fetchNotifications();
       if (user.role === 'ADMIN') {
         fetchExperts();
+        fetchStudents();
       }
     } else {
       setAssignments([]);
       setActiveAssignment(null);
       setNotifications([]);
+      setStudentsList([]);
+      setExpertsList([]);
     }
   }, [user]);
 
@@ -173,6 +178,10 @@ export default function App() {
       if (user) {
         fetchNotifications();
         fetchAssignments();
+        if (user.role === 'ADMIN') {
+          fetchStudents();
+          fetchExperts();
+        }
       }
     }, 4000);
     return () => clearInterval(timer);
@@ -294,6 +303,17 @@ export default function App() {
       const res = await fetch(`${API_BASE}/users/experts`, { headers: headers() });
       if (res.ok) {
         setExpertsList(await res.json());
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const fetchStudents = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/users/students`, { headers: headers() });
+      if (res.ok) {
+        setStudentsList(await res.json());
       }
     } catch (e) {
       console.error(e);
@@ -834,7 +854,8 @@ export default function App() {
       const newRequests = assignments.filter(a => a.status === 'PENDING_PAYMENT').length;
       const unassigned = assignments.filter(a => a.status === 'PAID').length;
       const underReview = assignments.filter(a => a.status === 'ADMIN_REVIEW').length;
-      return { total, newRequests, unassigned, underReview };
+      const totalStudents = studentsList.length;
+      return { total, newRequests, unassigned, underReview, totalStudents };
     }
   };
 
@@ -1276,10 +1297,10 @@ export default function App() {
                       <span className="metric-value">{metrics.unassigned}</span>
                       <span className="metric-desc">Paid orders awaiting expert assign</span>
                     </div>
-                    <div className="metric-card">
-                      <span className="metric-label">Under QA Review</span>
-                      <span className="metric-value">{metrics.underReview}</span>
-                      <span className="metric-desc">Draft solutions uploaded by experts</span>
+                    <div className="metric-card" style={{ borderLeft: '4px solid #10b981' }}>
+                      <span className="metric-label">Registered Students</span>
+                      <span className="metric-value" style={{ color: '#059669' }}>{metrics.totalStudents || studentsList.length}</span>
+                      <span className="metric-desc">Student profiles registered till date</span>
                     </div>
                   </div>
                 </div>
@@ -1489,23 +1510,138 @@ export default function App() {
           {/* VIEW: STUDENT DIRECTORY (ADMIN ONLY) */}
           {currentView === 'students' && !activeAssignment && user.role === 'ADMIN' && (
             <div className="glass-panel" style={{ padding: '2rem' }}>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: '600', marginBottom: '1rem' }}>Students Registry</h3>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                Viewing all student profiles registered on the platform. All student contact details are hidden from experts.
-              </p>
-              <div className="table-container" style={{ marginTop: '1.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <h3 style={{ fontSize: '1.25rem', fontWeight: '700', margin: 0 }}>Students Registry</h3>
+                    <span className="badge badge-success" style={{ fontSize: '0.78rem', padding: '0.3rem 0.65rem' }}>
+                      🎓 {studentsList.length} Registered Till Date
+                    </span>
+                  </div>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.35rem' }}>
+                    Comprehensive registry of all student profiles registered on the platform till date, with registration timestamps and orders.
+                  </p>
+                </div>
+
+                {/* Search Filter Box */}
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="🔍 Search student name or email..."
+                    value={studentSearchQuery}
+                    onChange={e => setStudentSearchQuery(e.target.value)}
+                    style={{ width: '260px', padding: '0.45rem 0.85rem', fontSize: '0.82rem' }}
+                  />
+                  {studentSearchQuery && (
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      style={{ padding: '0.45rem 0.75rem', fontSize: '0.8rem' }}
+                      onClick={() => setStudentSearchQuery('')}
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Summary Stat Cards */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+                <div className="metric-card" style={{ padding: '1rem 1.25rem', background: '#ffffff', borderLeft: '4px solid var(--accent-primary)' }}>
+                  <span className="metric-label" style={{ fontSize: '0.72rem' }}>Total Students</span>
+                  <span className="metric-value" style={{ fontSize: '1.5rem', color: 'var(--accent-primary)' }}>{studentsList.length}</span>
+                  <span className="metric-desc">Registered till date</span>
+                </div>
+                <div className="metric-card" style={{ padding: '1rem 1.25rem', background: '#ffffff', borderLeft: '4px solid #10b981' }}>
+                  <span className="metric-label" style={{ fontSize: '0.72rem' }}>Total Orders Placed</span>
+                  <span className="metric-value" style={{ fontSize: '1.5rem', color: '#059669' }}>
+                    {studentsList.reduce((sum, s) => sum + (s.totalOrders || 0), 0)}
+                  </span>
+                  <span className="metric-desc">Across all student accounts</span>
+                </div>
+                <div className="metric-card" style={{ padding: '1rem 1.25rem', background: '#ffffff', borderLeft: '4px solid #f59e0b' }}>
+                  <span className="metric-label" style={{ fontSize: '0.72rem' }}>Active Workspaces</span>
+                  <span className="metric-value" style={{ fontSize: '1.5rem', color: '#d97706' }}>
+                    {studentsList.reduce((sum, s) => sum + (s.activeOrders || 0), 0)}
+                  </span>
+                  <span className="metric-desc">Orders currently in progress</span>
+                </div>
+              </div>
+
+              {/* Students Registry Table */}
+              <div className="table-container">
                 <table className="premium-table">
                   <thead>
                     <tr>
-                      <th>Name</th>
-                      <th>System Role</th>
+                      <th>Student Profile</th>
+                      <th>Email Address</th>
+                      <th>Registered Till Date</th>
+                      <th>Total Orders</th>
+                      <th>Active Projects</th>
+                      <th>Account Status</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td style={{ fontWeight: '600' }}>Alice (Student)</td>
-                      <td><span className="badge badge-info">STUDENT</span></td>
-                    </tr>
+                    {studentsList
+                      .filter(s => 
+                        s.name?.toLowerCase().includes(studentSearchQuery.toLowerCase()) || 
+                        s.email?.toLowerCase().includes(studentSearchQuery.toLowerCase())
+                      )
+                      .map(s => (
+                        <tr key={s.id}>
+                          <td>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                              <div className="user-avatar-circle" style={{ width: '32px', height: '32px', fontSize: '0.78rem' }}>
+                                {s.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'ST'}
+                              </div>
+                              <div>
+                                <div style={{ fontWeight: '600', color: 'var(--text-primary)', fontSize: '0.88rem' }}>
+                                  {s.name}
+                                </div>
+                                <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
+                                  ID: {s.id.slice(0, 8)}...
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td style={{ color: 'var(--text-secondary)', fontSize: '0.84rem' }}>
+                            {s.email}
+                          </td>
+                          <td style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                            {localizeTime(s.createdAt)}
+                          </td>
+                          <td>
+                            <span className="badge badge-info" style={{ fontWeight: '600' }}>
+                              {s.totalOrders || 0} orders
+                            </span>
+                          </td>
+                          <td>
+                            {s.activeOrders > 0 ? (
+                              <span className="badge badge-pending">
+                                {s.activeOrders} active
+                              </span>
+                            ) : (
+                              <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>None</span>
+                            )}
+                          </td>
+                          <td>
+                            <span className="badge badge-success">
+                              ACTIVE STUDENT
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    {studentsList.filter(s => 
+                      s.name?.toLowerCase().includes(studentSearchQuery.toLowerCase()) || 
+                      s.email?.toLowerCase().includes(studentSearchQuery.toLowerCase())
+                    ).length === 0 && (
+                      <tr>
+                        <td colSpan="6" style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--text-muted)' }}>
+                          No registered students found matching your search.
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
