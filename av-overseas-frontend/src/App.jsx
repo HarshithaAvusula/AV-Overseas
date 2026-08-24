@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-const API_BASE = 'http://localhost:8080/api/v1';
+const API_BASE = import.meta.env.VITE_API_BASE || 
+  (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? 'http://localhost:8080/api/v1' 
+    : '/api/v1');
 
 // Dynamic Sidebar Menu Configurations by Role
 const menusByRole = {
