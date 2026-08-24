@@ -25,6 +25,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -85,6 +86,23 @@ public class PaymentController {
             String payoutStatus
     ) {}
 
+    public record ExpertPayoutDTO(
+            String id,
+            String assignmentId,
+            String assignmentTitle,
+            String subject,
+            String expertId,
+            String expertName,
+            String expertEmail,
+            String studentName,
+            BigDecimal totalOrderAmount,
+            BigDecimal amount,
+            String status,
+            Instant approvedAt,
+            Instant releasedAt,
+            Instant createdAt
+    ) {}
+
     public record SubjectRevenueDTO(String subject, long orderCount, BigDecimal revenueUSD) {}
 
     public record RevenueReportDTO(
@@ -117,7 +135,6 @@ public class PaymentController {
             RazorpayClient razorpay = new RazorpayClient(keyId, keySecret);
 
             JSONObject orderRequest = new JSONObject();
-            // Convert USD amount to cents/paise (multiply by 100)
             int amountInCents = req.amount().multiply(new BigDecimal("100")).intValue();
             orderRequest.put("amount", amountInCents);
             orderRequest.put("currency", "USD");
@@ -134,7 +151,6 @@ public class PaymentController {
                     assignment.getId()
             ));
         } catch (Exception e) {
-            // Fallback for local development or test mode when Razorpay credentials are test keys
             String mockOrderId = "order_sim_" + UUID.randomUUID().toString().substring(0, 10);
             int amountInCents = req.amount().multiply(new BigDecimal("100")).intValue();
             return ResponseEntity.ok(new OrderResponse(
@@ -174,7 +190,6 @@ public class PaymentController {
                         return ResponseEntity.badRequest().body("Invalid payment signature check failed");
                     }
                 } catch (Exception sigEx) {
-                    // If signature check fails in test environment, allow test execution if payment ID is provided
                     if (req.razorpayPaymentId() == null || req.razorpayPaymentId().isEmpty()) {
                         return ResponseEntity.badRequest().body("Signature verification failed: " + sigEx.getMessage());
                     }
@@ -249,7 +264,7 @@ public class PaymentController {
         }
     }
 
-    // List all payments with student details
+    // List all student payments (Independent for Payments page)
     @GetMapping("/payments")
     public ResponseEntity<List<PaymentDTO>> getPayments() {
         User user = getAuthenticatedUser();
@@ -279,6 +294,32 @@ public class PaymentController {
         return ResponseEntity.ok(dtos);
     }
 
+    // List all expert payouts (Independent for Expert Payouts page)
+    @GetMapping("/payouts")
+    public ResponseEntity<List<ExpertPayoutDTO>> getPayouts() {
+        User user = getAuthenticatedUser();
+        List<ExpertPayout> payouts;
+
+        if (user.getRole() == UserRole.ADMIN) {
+            payouts = payoutRepository.findAll();
+        } else if (user.getRole() == UserRole.EXPERT) {
+            payouts = payoutRepository.findByExpertId(user.getId());
+        } else {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        List<ExpertPayoutDTO> dtos = payouts.stream()
+                .sorted((a, b) -> {
+                    if (a.getCreatedAt() == null) return 1;
+                    if (b.getCreatedAt() == null) return -1;
+                    return b.getCreatedAt().compareTo(a.getCreatedAt());
+                })
+                .map(this::mapToPayoutDTO)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(dtos);
+    }
+
     // Revenue and Activity Reports for Admin
     @GetMapping("/reports/revenue")
     public ResponseEntity<RevenueReportDTO> getRevenueReport() {
@@ -295,8 +336,16 @@ public class PaymentController {
                 .map(Payment::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
+        // Dynamically compute distinct paid students count from DB payment records
         long paidStudentsCount = allPayments.stream()
-                .map(Payment::getStudentId)
+                .map(p -> {
+                    if (p.getStudentId() != null) return p.getStudentId();
+                    if (p.getAssignmentId() != null) {
+                        Optional<Assignment> a = assignmentRepository.findById(p.getAssignmentId());
+                        if (a.isPresent()) return a.get().getStudentId();
+                    }
+                    return null;
+                })
                 .filter(Objects::nonNull)
                 .distinct()
                 .count();
@@ -353,8 +402,17 @@ public class PaymentController {
     private PaymentDTO mapToPaymentDTO(Payment p) {
         String studentName = "Student";
         String studentEmail = "";
-        if (p.getStudentId() != null) {
-            Optional<User> studentOpt = userRepository.findById(p.getStudentId());
+        UUID studentId = p.getStudentId();
+
+        if (studentId == null && p.getAssignmentId() != null) {
+            Optional<Assignment> assignOpt = assignmentRepository.findById(p.getAssignmentId());
+            if (assignOpt.isPresent()) {
+                studentId = assignOpt.get().getStudentId();
+            }
+        }
+
+        if (studentId != null) {
+            Optional<User> studentOpt = userRepository.findById(studentId);
             if (studentOpt.isPresent()) {
                 studentName = studentOpt.get().getName();
                 studentEmail = studentOpt.get().getEmail();
@@ -384,7 +442,7 @@ public class PaymentController {
                 p.getAssignmentId() != null ? p.getAssignmentId().toString() : "",
                 assignmentTitle,
                 subject,
-                p.getStudentId() != null ? p.getStudentId().toString() : "",
+                studentId != null ? studentId.toString() : "",
                 studentName,
                 studentEmail,
                 p.getAmount(),
@@ -394,6 +452,54 @@ public class PaymentController {
                 p.getStatus() != null ? p.getStatus().name() : "PAID",
                 p.getCreatedAt() != null ? p.getCreatedAt() : Instant.now(),
                 payoutStatus
+        );
+    }
+
+    private ExpertPayoutDTO mapToPayoutDTO(ExpertPayout ep) {
+        String assignmentTitle = "Academic Tutoring Case";
+        String subject = "Computer Science";
+        String studentName = "Student";
+        BigDecimal totalOrderAmount = ep.getAmount().divide(new BigDecimal("0.70"), 2, RoundingMode.HALF_UP);
+
+        if (ep.getAssignmentId() != null) {
+            Optional<Assignment> a = assignmentRepository.findById(ep.getAssignmentId());
+            if (a.isPresent()) {
+                assignmentTitle = a.get().getTitle();
+                subject = a.get().getSubject();
+                if (a.get().getStudentId() != null) {
+                    Optional<User> stu = userRepository.findById(a.get().getStudentId());
+                    if (stu.isPresent()) {
+                        studentName = stu.get().getName();
+                    }
+                }
+            }
+        }
+
+        String expertName = "Expert Mentor";
+        String expertEmail = "";
+        if (ep.getExpertId() != null) {
+            Optional<User> exp = userRepository.findById(ep.getExpertId());
+            if (exp.isPresent()) {
+                expertName = exp.get().getName();
+                expertEmail = exp.get().getEmail();
+            }
+        }
+
+        return new ExpertPayoutDTO(
+                ep.getId().toString(),
+                ep.getAssignmentId() != null ? ep.getAssignmentId().toString() : "",
+                assignmentTitle,
+                subject,
+                ep.getExpertId() != null ? ep.getExpertId().toString() : "",
+                expertName,
+                expertEmail,
+                studentName,
+                totalOrderAmount,
+                ep.getAmount(),
+                ep.getStatus() != null ? ep.getStatus().name() : "APPROVED",
+                ep.getApprovedAt(),
+                ep.getReleasedAt(),
+                ep.getCreatedAt() != null ? ep.getCreatedAt() : Instant.now()
         );
     }
 
