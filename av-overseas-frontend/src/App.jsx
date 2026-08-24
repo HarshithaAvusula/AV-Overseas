@@ -80,6 +80,8 @@ export default function App() {
   const [paymentDateFilter, setPaymentDateFilter] = useState('ALL');
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [payoutSearchQuery, setPayoutSearchQuery] = useState('');
+  const [payoutStatusFilter, setPayoutStatusFilter] = useState('ALL');
+  const [selectedPayout, setSelectedPayout] = useState(null);
 
   // Meetings management states
   const [meetingsList, setMeetingsList] = useState([]);
@@ -2109,172 +2111,192 @@ export default function App() {
 
           {/* VIEW: EXPERT PAYOUTS & COMPENSATION LEDGER (INDEPENDENT) */}
           {(currentView === 'payouts' || currentView === 'earnings') && !activeAssignment && (
-            <div className="glass-panel" style={{ padding: '2rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
+            <div className="glass-panel" style={{ padding: '1.75rem 2rem' }}>
+              {/* Compact Header & Filter Toolbar Aligned */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.25rem' }}>
                 <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <h3 style={{ fontSize: '1.25rem', fontWeight: '700', margin: 0 }}>
-                      {user.role === 'ADMIN' ? 'Expert Payouts & Compensation Ledger' : 'My Expert Earnings & Payouts'}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                    <h3 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0, color: 'var(--text-primary)' }}>
+                      {user?.role === 'ADMIN' ? 'Expert Payouts & Compensation Ledger' : 'My Expert Earnings & Payouts'}
                     </h3>
-                    <span className="badge badge-info" style={{ fontSize: '0.78rem', padding: '0.3rem 0.65rem' }}>
+                    <span className="badge badge-info" style={{ fontSize: '0.75rem', padding: '0.25rem 0.6rem', fontWeight: '700' }}>
                       💰 70% Tutor Share Allocation
                     </span>
                   </div>
-                  <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.35rem' }}>
-                    {user.role === 'ADMIN'
+                  <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '0.25rem', margin: 0 }}>
+                    {user?.role === 'ADMIN'
                       ? 'Review expert tutor milestone deliverables, approve remuneration (70% share), and disburse final payouts.'
                       : 'Detailed ledger of your approved and released compensation for completed student mentoring assignments.'}
                   </p>
                 </div>
 
-                {/* Search Filter Box */}
-                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                {/* Compact Toolbar with Search & Status Filter */}
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
                   <input
                     type="text"
                     className="form-input"
-                    placeholder="🔍 Search payouts by expert, topic, ID..."
+                    placeholder="🔍 Search payouts by expert, course, ID..."
                     value={payoutSearchQuery}
                     onChange={e => setPayoutSearchQuery(e.target.value)}
-                    style={{ width: '280px', padding: '0.45rem 0.85rem', fontSize: '0.82rem' }}
+                    style={{ width: '240px', padding: '0.45rem 0.75rem', fontSize: '0.82rem', borderRadius: 'var(--radius-md)' }}
                   />
-                  {payoutSearchQuery && (
+
+                  <select
+                    className="form-input"
+                    value={payoutStatusFilter}
+                    onChange={e => setPayoutStatusFilter(e.target.value)}
+                    style={{ width: '130px', padding: '0.45rem 0.6rem', fontSize: '0.82rem', borderRadius: 'var(--radius-md)' }}
+                  >
+                    <option value="ALL">All Statuses</option>
+                    <option value="RELEASED">✓ Released</option>
+                    <option value="APPROVED">⏳ Approved</option>
+                    <option value="PENDING">Pending</option>
+                  </select>
+
+                  {(payoutSearchQuery || payoutStatusFilter !== 'ALL') && (
                     <button
                       type="button"
                       className="btn btn-secondary"
                       style={{ padding: '0.45rem 0.75rem', fontSize: '0.8rem' }}
-                      onClick={() => setPayoutSearchQuery('')}
+                      onClick={() => {
+                        setPayoutSearchQuery('');
+                        setPayoutStatusFilter('ALL');
+                      }}
                     >
-                      Clear
+                      Reset
                     </button>
                   )}
                 </div>
               </div>
 
-              {/* Payout Metric Cards */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
-                <div className="metric-card" style={{ padding: '1.15rem', background: '#ffffff', borderLeft: '4px solid #6366f1' }}>
-                  <span className="metric-label" style={{ fontSize: '0.74rem' }}>Total Expert Share Pool (70%)</span>
-                  <span className="metric-value" style={{ fontSize: '1.65rem', color: '#4f46e5', fontWeight: '800' }}>
-                    ${(paymentsList.reduce((sum, p) => sum + (Number(p.amount) || 0), 0) * 0.70).toFixed(2)} USD
+              {/* 4 Compact Stat Cards (Height & Size Reduced) */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '0.65rem', marginBottom: '1rem' }}>
+                <div className="metric-card" style={{ padding: '0.65rem 0.85rem', background: '#ffffff', borderLeft: '3px solid #6366f1', minHeight: 'auto' }}>
+                  <span className="metric-label" style={{ fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Expert Share Pool (70%)</span>
+                  <span className="metric-value" style={{ fontSize: '1.2rem', color: '#4f46e5', fontWeight: '800', marginTop: '0.15rem' }}>
+                    ${((Array.isArray(paymentsList) ? paymentsList : []).reduce((sum, p) => sum + (Number(p.amount) || 0), 0) * 0.70).toFixed(2)} USD
                   </span>
-                  <span className="metric-desc">Available for eligible completions</span>
+                  <span className="metric-desc" style={{ fontSize: '0.66rem', marginTop: '0.1rem' }}>Eligible mentor compensation</span>
                 </div>
-                <div className="metric-card" style={{ padding: '1.15rem', background: '#ffffff', borderLeft: '4px solid #10b981' }}>
-                  <span className="metric-label" style={{ fontSize: '0.74rem' }}>Disbursed / Released Payouts</span>
-                  <span className="metric-value" style={{ fontSize: '1.65rem', color: '#059669', fontWeight: '800' }}>
-                    ${payoutsList.filter(p => p.status === 'RELEASED').reduce((sum, p) => sum + (Number(p.amount) || 0), 0).toFixed(2)} USD
+
+                <div className="metric-card" style={{ padding: '0.65rem 0.85rem', background: '#ffffff', borderLeft: '3px solid #10b981', minHeight: 'auto' }}>
+                  <span className="metric-label" style={{ fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Disbursed / Released</span>
+                  <span className="metric-value" style={{ fontSize: '1.2rem', color: '#059669', fontWeight: '800', marginTop: '0.15rem' }}>
+                    ${(Array.isArray(payoutsList) ? payoutsList : []).filter(p => p.status === 'RELEASED').reduce((sum, p) => sum + (Number(p.amount) || 0), 0).toFixed(2)} USD
                   </span>
-                  <span className="metric-desc">Successfully transferred to mentors</span>
+                  <span className="metric-desc" style={{ fontSize: '0.66rem', marginTop: '0.1rem' }}>Transferred to mentors</span>
                 </div>
-                <div className="metric-card" style={{ padding: '1.15rem', background: '#ffffff', borderLeft: '4px solid #f59e0b' }}>
-                  <span className="metric-label" style={{ fontSize: '0.74rem' }}>Approved Payouts in Escrow</span>
-                  <span className="metric-value" style={{ fontSize: '1.65rem', color: '#d97706', fontWeight: '800' }}>
-                    ${payoutsList.filter(p => p.status === 'APPROVED').reduce((sum, p) => sum + (Number(p.amount) || 0), 0).toFixed(2)} USD
+
+                <div className="metric-card" style={{ padding: '0.65rem 0.85rem', background: '#ffffff', borderLeft: '3px solid #f59e0b', minHeight: 'auto' }}>
+                  <span className="metric-label" style={{ fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Approved in Escrow</span>
+                  <span className="metric-value" style={{ fontSize: '1.2rem', color: '#d97706', fontWeight: '800', marginTop: '0.15rem' }}>
+                    ${(Array.isArray(payoutsList) ? payoutsList : []).filter(p => p.status === 'APPROVED').reduce((sum, p) => sum + (Number(p.amount) || 0), 0).toFixed(2)} USD
                   </span>
-                  <span className="metric-desc">Approved and awaiting release</span>
+                  <span className="metric-desc" style={{ fontSize: '0.66rem', marginTop: '0.1rem' }}>Awaiting release</span>
                 </div>
-                <div className="metric-card" style={{ padding: '1.15rem', background: '#ffffff', borderLeft: '4px solid var(--accent-primary)' }}>
-                  <span className="metric-label" style={{ fontSize: '0.74rem' }}>Total Payout Records</span>
-                  <span className="metric-value" style={{ fontSize: '1.65rem', color: 'var(--accent-primary)', fontWeight: '800' }}>
-                    {payoutsList.length} Records
+
+                <div className="metric-card" style={{ padding: '0.65rem 0.85rem', background: '#ffffff', borderLeft: '3px solid var(--accent-primary)', minHeight: 'auto' }}>
+                  <span className="metric-label" style={{ fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Total Payout Records</span>
+                  <span className="metric-value" style={{ fontSize: '1.2rem', color: 'var(--accent-primary)', fontWeight: '800', marginTop: '0.15rem' }}>
+                    {(Array.isArray(payoutsList) ? payoutsList : []).length} Records
                   </span>
-                  <span className="metric-desc">Tracked in compensation system</span>
+                  <span className="metric-desc" style={{ fontSize: '0.66rem', marginTop: '0.1rem' }}>In compensation ledger</span>
                 </div>
               </div>
 
-              {/* Payouts Table */}
-              <div className="table-container">
-                <table className="premium-table">
+              {/* Minimal & Professional Expert Payouts Table (4 Columns Only) */}
+              <div className="table-container" style={{ border: '1px solid var(--border-glass)', borderRadius: 'var(--radius-md)', background: '#ffffff' }}>
+                <table className="premium-table" style={{ margin: 0, width: '100%' }}>
                   <thead>
                     <tr>
-                      <th>Payout Ref</th>
-                      <th>Expert Mentor</th>
-                      <th>Student & Assignment</th>
-                      <th>Student Deposit</th>
-                      <th>Expert Compensation (70%)</th>
-                      <th>Payout Status</th>
-                      <th>Date</th>
-                      {user.role === 'ADMIN' && <th>Admin Action</th>}
+                      <th style={{ padding: '0.8rem 1.25rem' }}>Expert</th>
+                      <th style={{ padding: '0.8rem 1.25rem' }}>Course / Assignment</th>
+                      <th style={{ padding: '0.8rem 1.25rem', textAlign: 'right' }}>Payout Amount (70%)</th>
+                      <th style={{ padding: '0.8rem 1.25rem', textAlign: 'center', width: '180px' }}>Action</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {payoutsList
-                      .filter(p => 
-                        p.expertName?.toLowerCase().includes(payoutSearchQuery.toLowerCase()) || 
-                        p.expertEmail?.toLowerCase().includes(payoutSearchQuery.toLowerCase()) ||
-                        p.assignmentTitle?.toLowerCase().includes(payoutSearchQuery.toLowerCase()) ||
-                        p.id?.toLowerCase().includes(payoutSearchQuery.toLowerCase())
-                      )
+                    {(Array.isArray(payoutsList) ? payoutsList : [])
+                      .filter(p => {
+                        const q = payoutSearchQuery.toLowerCase();
+                        const matchQuery = !q || 
+                          (p?.expertName || '').toLowerCase().includes(q) || 
+                          (p?.expertEmail || '').toLowerCase().includes(q) ||
+                          (p?.assignmentTitle || '').toLowerCase().includes(q) ||
+                          (p?.studentName || '').toLowerCase().includes(q) ||
+                          (p?.id || '').toLowerCase().includes(q);
+
+                        const matchStatus = payoutStatusFilter === 'ALL' || (p?.status || 'PENDING') === payoutStatusFilter;
+
+                        return matchQuery && matchStatus;
+                      })
                       .map(p => (
-                        <tr key={p.id}>
-                          <td>
-                            <div style={{ fontFamily: 'monospace', fontSize: '0.8rem', fontWeight: '600', color: 'var(--text-primary)' }}>
-                              PO_{p.id.slice(0, 8).toUpperCase()}
-                            </div>
-                            <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Bank / Gateway Transfer</span>
-                          </td>
-                          <td>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                              <div className="user-avatar-circle" style={{ width: '28px', height: '28px', fontSize: '0.72rem', background: '#6366f1' }}>
-                                {p.expertName?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'EX'}
+                        <tr key={p.id} style={{ transition: 'background 0.15s ease' }}>
+                          {/* 1. Expert */}
+                          <td style={{ padding: '0.8rem 1.25rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                              <div className="user-avatar-circle" style={{ width: '30px', height: '30px', fontSize: '0.72rem', fontWeight: '700', background: '#6366f1' }}>
+                                {p?.expertName ? p.expertName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'EX'}
                               </div>
-                              <div>
-                                <div style={{ fontWeight: '600', fontSize: '0.84rem' }}>{p.expertName}</div>
-                                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{p.expertEmail}</div>
-                              </div>
+                              <span style={{ fontWeight: '700', fontSize: '0.88rem', color: 'var(--text-primary)' }}>
+                                {p?.expertName || 'Expert Mentor'}
+                              </span>
                             </div>
                           </td>
-                          <td>
-                            <div style={{ fontWeight: '600', fontSize: '0.84rem' }}>{p.assignmentTitle}</div>
-                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Student: {p.studentName || 'Student'}</div>
+
+                          {/* 2. Course / Assignment (Neatly truncated) */}
+                          <td style={{ padding: '0.8rem 1.25rem', maxWidth: '340px' }}>
+                            <div
+                              style={{
+                                fontWeight: '600',
+                                fontSize: '0.85rem',
+                                color: 'var(--text-primary)',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis'
+                              }}
+                              title={p?.assignmentTitle || 'Mentoring Case'}
+                            >
+                              {p?.assignmentTitle || 'Mentoring Case'}
+                            </div>
                           </td>
-                          <td>
-                            <span style={{ fontSize: '0.84rem', color: 'var(--text-secondary)' }}>
-                              ${Number(p.totalOrderAmount || 150).toFixed(2)} USD
+
+                          {/* 3. Payout Amount (70%) */}
+                          <td style={{ padding: '0.8rem 1.25rem', textAlign: 'right' }}>
+                            <span style={{ fontWeight: '800', color: '#4f46e5', fontSize: '0.92rem' }}>
+                              ${Number(p?.amount || 0).toFixed(0)} USD
                             </span>
                           </td>
-                          <td>
-                            <span style={{ fontWeight: '700', color: '#4f46e5', fontSize: '0.94rem' }}>
-                              ${Number(p.amount).toFixed(2)} USD
-                            </span>
+
+                          {/* 4. Action */}
+                          <td style={{ padding: '0.8rem 1.25rem', textAlign: 'center' }}>
+                            <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'center', alignItems: 'center' }}>
+                              <button
+                                type="button"
+                                className="btn btn-secondary"
+                                style={{ fontSize: '0.75rem', padding: '0.35rem 0.65rem', fontWeight: '600' }}
+                                onClick={() => setSelectedPayout(p)}
+                              >
+                                View Details
+                              </button>
+                              {user?.role === 'ADMIN' && p?.status === 'APPROVED' && p?.assignmentId && (
+                                <button
+                                  type="button"
+                                  className="btn btn-primary"
+                                  style={{ fontSize: '0.72rem', padding: '0.35rem 0.6rem', fontWeight: '600' }}
+                                  onClick={() => handleReleasePayout(p.assignmentId)}
+                                  title="Release Funds to Mentor"
+                                >
+                                  Release
+                                </button>
+                              )}
+                            </div>
                           </td>
-                          <td>
-                            <span className={`badge ${
-                              p.status === 'RELEASED' ? 'badge-success' :
-                              p.status === 'APPROVED' ? 'badge-info' : 'badge-pending'
-                            }`}>
-                              {p.status === 'RELEASED' ? '✓ Released' :
-                               p.status === 'APPROVED' ? '⏳ Approved' : 'Pending'}
-                            </span>
-                          </td>
-                          <td style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                            {localizeTime(p.releasedAt || p.approvedAt || p.createdAt)}
-                          </td>
-                          {user.role === 'ADMIN' && (
-                            <td>
-                              <div style={{ display: 'flex', gap: '0.4rem' }}>
-                                {p.status === 'APPROVED' && p.assignmentId && (
-                                  <button
-                                    type="button"
-                                    className="btn btn-primary"
-                                    style={{ fontSize: '0.72rem', padding: '0.3rem 0.65rem' }}
-                                    onClick={() => handleReleasePayout(p.assignmentId)}
-                                    title="Release Funds & Disburse to Mentor"
-                                  >
-                                    Release Funds
-                                  </button>
-                                )}
-                                {p.status === 'RELEASED' && (
-                                  <span style={{ fontSize: '0.75rem', color: '#059669', fontWeight: '600' }}>✓ Disbursed</span>
-                                )}
-                              </div>
-                            </td>
-                          )}
                         </tr>
                       ))}
-                    {payoutsList.length === 0 && (
+                    {(Array.isArray(payoutsList) ? payoutsList : []).length === 0 && (
                       <tr>
-                        <td colSpan={user.role === 'ADMIN' ? 8 : 7} style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--text-muted)' }}>
+                        <td colSpan="4" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', fontSize: '0.82rem' }}>
                           No expert payout records created yet.
                         </td>
                       </tr>
@@ -4140,6 +4162,151 @@ export default function App() {
                 type="button"
                 className="btn btn-secondary"
                 onClick={() => setSelectedPayment(null)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Interactive Expert Payout Details Modal */}
+      {selectedPayout && (
+        <div className="modal-overlay" onClick={() => setSelectedPayout(null)}>
+          <div className="modal-container" style={{ maxWidth: '640px', width: '92vw' }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-glass)', paddingBottom: '1rem', marginBottom: '1.25rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                <span style={{ fontSize: '1.3rem' }}>💰</span>
+                <div>
+                  <h3 style={{ fontSize: '1.2rem', fontWeight: '800', margin: 0, color: 'var(--text-primary)' }}>
+                    Expert Payout Details & Remuneration
+                  </h3>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    Platform Compensation Breakdown (70% Tutor Allocation)
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                style={{ padding: '0.35rem 0.65rem', fontSize: '0.85rem' }}
+                onClick={() => setSelectedPayout(null)}
+              >
+                ✕ Close
+              </button>
+            </div>
+
+            {/* Expert Info Card */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', background: '#f8fafc', padding: '1rem 1.25rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-glass)', marginBottom: '1.25rem' }}>
+              <div className="user-avatar-circle" style={{ width: '42px', height: '42px', fontSize: '0.95rem', fontWeight: '700', background: '#6366f1' }}>
+                {selectedPayout.expertName ? selectedPayout.expertName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'EX'}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span style={{ fontWeight: '800', fontSize: '0.95rem', color: 'var(--text-primary)' }}>{selectedPayout.expertName || 'Expert Mentor'}</span>
+                  <span className="badge badge-info" style={{ fontSize: '0.68rem', padding: '0.15rem 0.45rem' }}>Approved Mentor</span>
+                </div>
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '0.15rem' }}>{selectedPayout.expertEmail}</div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Expert Payout (70%)</span>
+                <div style={{ fontSize: '1.25rem', fontWeight: '800', color: '#4f46e5' }}>
+                  ${Number(selectedPayout.amount || 0).toFixed(2)} USD
+                </div>
+              </div>
+            </div>
+
+            {/* Payout Details 2-Column Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '0.85rem', marginBottom: '1.25rem' }}>
+              <div style={{ background: '#ffffff', padding: '0.85rem 1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-glass)' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Payout Reference ID</span>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.25rem' }}>
+                  <span style={{ fontFamily: 'monospace', fontWeight: '700', fontSize: '0.86rem', color: 'var(--text-primary)' }}>
+                    PO_{selectedPayout.id ? selectedPayout.id.slice(0, 8).toUpperCase() : 'LIVE_001'}
+                  </span>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    style={{ fontSize: '0.68rem', padding: '0.2rem 0.45rem' }}
+                    onClick={() => {
+                      navigator.clipboard.writeText('PO_' + (selectedPayout.id ? selectedPayout.id.slice(0, 8).toUpperCase() : 'LIVE_001'));
+                      alert('Payout ID copied to clipboard!');
+                    }}
+                  >
+                    Copy
+                  </button>
+                </div>
+              </div>
+
+              <div style={{ background: '#ffffff', padding: '0.85rem 1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-glass)' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Payout Status</span>
+                <div style={{ marginTop: '0.25rem' }}>
+                  <span className={`badge ${
+                    selectedPayout.status === 'RELEASED' ? 'badge-success' :
+                    selectedPayout.status === 'APPROVED' ? 'badge-info' : 'badge-pending'
+                  }`} style={{ fontWeight: '700', fontSize: '0.8rem' }}>
+                    {selectedPayout.status === 'RELEASED' ? '✓ Disbursed / Released' :
+                     selectedPayout.status === 'APPROVED' ? '⏳ Approved in Escrow' : 'Pending Milestone'}
+                  </span>
+                </div>
+              </div>
+
+              <div style={{ background: '#ffffff', padding: '0.85rem 1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-glass)' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Total Student Deposit</span>
+                <div style={{ fontWeight: '700', fontSize: '0.88rem', color: 'var(--text-primary)', marginTop: '0.25rem' }}>
+                  ${Number(selectedPayout.totalOrderAmount || 150).toFixed(2)} USD
+                </div>
+                <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>100% Student Checkout Value</div>
+              </div>
+
+              <div style={{ background: '#ffffff', padding: '0.85rem 1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-glass)' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Platform Share (30%)</span>
+                <div style={{ fontWeight: '700', fontSize: '0.88rem', color: 'var(--text-primary)', marginTop: '0.25rem' }}>
+                  ${(Number(selectedPayout.totalOrderAmount || 150) * 0.30).toFixed(2)} USD
+                </div>
+                <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>Operational & Platform Fee</div>
+              </div>
+
+              <div style={{ background: '#ffffff', padding: '0.85rem 1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-glass)' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Course / Assignment</span>
+                <div style={{ fontWeight: '700', fontSize: '0.86rem', color: 'var(--text-primary)', marginTop: '0.25rem' }}>
+                  {selectedPayout.assignmentTitle || 'Mentoring Case'}
+                </div>
+              </div>
+
+              <div style={{ background: '#ffffff', padding: '0.85rem 1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-glass)' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Student Payer</span>
+                <div style={{ fontWeight: '700', fontSize: '0.86rem', color: 'var(--text-primary)', marginTop: '0.25rem' }}>
+                  🎓 {selectedPayout.studentName || 'Registered Student'}
+                </div>
+              </div>
+
+              <div style={{ gridColumn: 'span 2', background: '#ffffff', padding: '0.85rem 1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-glass)' }}>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Date & Timestamp</span>
+                <div style={{ fontWeight: '700', fontSize: '0.86rem', color: 'var(--text-primary)', marginTop: '0.25rem' }}>
+                  📅 {localizeTime(selectedPayout.releasedAt || selectedPayout.approvedAt || selectedPayout.createdAt)}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+              {user?.role === 'ADMIN' && selectedPayout.status === 'APPROVED' && selectedPayout.assignmentId && (
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  style={{ fontWeight: '700' }}
+                  onClick={() => {
+                    handleReleasePayout(selectedPayout.assignmentId);
+                    setSelectedPayout(null);
+                  }}
+                >
+                  💸 Release Payout Funds
+                </button>
+              )}
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => setSelectedPayout(null)}
               >
                 Close
               </button>
