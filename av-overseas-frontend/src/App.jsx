@@ -2120,12 +2120,12 @@ export default function App() {
                       {user?.role === 'ADMIN' ? 'Expert Payouts & Compensation Ledger' : 'My Expert Earnings & Payouts'}
                     </h3>
                     <span className="badge badge-info" style={{ fontSize: '0.75rem', padding: '0.25rem 0.6rem', fontWeight: '700' }}>
-                      💰 70% Tutor Share Allocation
+                      💰 Tutor Share Allocation
                     </span>
                   </div>
                   <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '0.25rem', margin: 0 }}>
                     {user?.role === 'ADMIN'
-                      ? 'Review expert tutor milestone deliverables, approve remuneration (70% share), and disburse final payouts.'
+                      ? 'Review expert tutor milestone deliverables, approve remuneration, and disburse final payouts.'
                       : 'Detailed ledger of your approved and released compensation for completed student mentoring assignments.'}
                   </p>
                 </div>
@@ -2172,7 +2172,7 @@ export default function App() {
               {/* 4 Compact Stat Cards (Height & Size Reduced) */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '0.65rem', marginBottom: '1rem' }}>
                 <div className="metric-card" style={{ padding: '0.65rem 0.85rem', background: '#ffffff', borderLeft: '3px solid #6366f1', minHeight: 'auto' }}>
-                  <span className="metric-label" style={{ fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Expert Share Pool (70%)</span>
+                  <span className="metric-label" style={{ fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Expert Share Pool</span>
                   <span className="metric-value" style={{ fontSize: '1.2rem', color: '#4f46e5', fontWeight: '800', marginTop: '0.15rem' }}>
                     ${((Array.isArray(paymentsList) ? paymentsList : []).reduce((sum, p) => sum + (Number(p.amount) || 0), 0) * 0.70).toFixed(2)} USD
                   </span>
@@ -2211,8 +2211,8 @@ export default function App() {
                     <tr>
                       <th style={{ padding: '0.8rem 1.25rem' }}>Expert</th>
                       <th style={{ padding: '0.8rem 1.25rem' }}>Course / Assignment</th>
-                      <th style={{ padding: '0.8rem 1.25rem', textAlign: 'right' }}>Payout Amount (70%)</th>
-                      <th style={{ padding: '0.8rem 1.25rem', textAlign: 'center', width: '170px' }}>Release (Payment)</th>
+                      <th style={{ padding: '0.8rem 1.25rem', textAlign: 'right' }}>Payout Amount</th>
+                      <th style={{ padding: '0.8rem 1.25rem', textAlign: 'center', width: '170px' }}>Payment Status</th>
                       <th style={{ padding: '0.8rem 1.25rem', textAlign: 'center', width: '130px' }}>Action</th>
                     </tr>
                   </thead>
@@ -2233,14 +2233,14 @@ export default function App() {
                       })
                       .map(p => (
                         <tr key={p.id} style={{ transition: 'background 0.15s ease' }}>
-                          {/* 1. Expert */}
+                          {/* 1. Expert (clean without braces) */}
                           <td style={{ padding: '0.8rem 1.25rem' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
                               <div className="user-avatar-circle" style={{ width: '30px', height: '30px', fontSize: '0.72rem', fontWeight: '700', background: '#6366f1' }}>
-                                {p?.expertName ? p.expertName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'EX'}
+                                {p?.expertName ? p.expertName.replace(/\s*\([^)]*\)/g, '').trim().split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'EX'}
                               </div>
                               <span style={{ fontWeight: '700', fontSize: '0.88rem', color: 'var(--text-primary)' }}>
-                                {p?.expertName || 'Expert Mentor'}
+                                {p?.expertName ? p.expertName.replace(/\s*\([^)]*\)/g, '').trim() : 'Expert Mentor'}
                               </span>
                             </div>
                           </td>
@@ -2800,16 +2800,16 @@ export default function App() {
 
           {/* VIEW: ADMIN REPORTS - PLATFORM REVENUE & ACTIVITY */}
           {currentView === 'reports' && !activeAssignment && user.role === 'ADMIN' && (
-            <div className="glass-panel" style={{ padding: '2rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
+            <div className="glass-panel" style={{ padding: '1.75rem 2rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.25rem' }}>
                 <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <h3 style={{ fontSize: '1.25rem', fontWeight: '700', margin: 0 }}>Platform Revenue & Activity Reports</h3>
-                    <span className="badge badge-success" style={{ fontSize: '0.78rem', padding: '0.3rem 0.65rem' }}>
-                      📊 Executive Financial Summary
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                    <h3 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0, color: 'var(--text-primary)' }}>Platform Revenue & Activity Reports</h3>
+                    <span className="badge badge-success" style={{ fontSize: '0.75rem', padding: '0.25rem 0.6rem', fontWeight: '700' }}>
+                      📊 Financial Summary
                     </span>
                   </div>
-                  <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.35rem' }}>
+                  <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '0.25rem', margin: 0 }}>
                     Real-time consolidated revenue generation, paid student count, expert payout allocations, and domain performance.
                   </p>
                 </div>
@@ -2819,42 +2819,42 @@ export default function App() {
                   style={{ fontSize: '0.8rem', padding: '0.45rem 0.85rem' }}
                   onClick={() => { fetchRevenueReport(); fetchPayments(); }}
                 >
-                  🔄 Refresh Financial Data
+                  🔄 Refresh Data
                 </button>
               </div>
 
-              {/* 4 Primary Financial KPI Cards */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
-                <div className="metric-card" style={{ padding: '1.25rem', background: '#ffffff', borderLeft: '4px solid #10b981' }}>
-                  <span className="metric-label" style={{ fontSize: '0.74rem' }}>Total Revenue Generated</span>
-                  <span className="metric-value" style={{ fontSize: '1.75rem', color: '#059669', fontWeight: '800' }}>
+              {/* 4 Primary Financial KPI Cards (Height & Size Reduced) */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '0.65rem', marginBottom: '1rem' }}>
+                <div className="metric-card" style={{ padding: '0.65rem 0.85rem', background: '#ffffff', borderLeft: '3px solid #10b981', minHeight: 'auto' }}>
+                  <span className="metric-label" style={{ fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Total Revenue Generated</span>
+                  <span className="metric-value" style={{ fontSize: '1.2rem', color: '#059669', fontWeight: '800', marginTop: '0.15rem' }}>
                     ${Number(revenueReport?.totalRevenueUSD || paymentsList.reduce((sum, p) => sum + (Number(p.amount) || 0), 0)).toFixed(2)} USD
                   </span>
-                  <span className="metric-desc">Gross student deposit collections</span>
+                  <span className="metric-desc" style={{ fontSize: '0.66rem', marginTop: '0.1rem' }}>Gross student collections</span>
                 </div>
 
-                <div className="metric-card" style={{ padding: '1.25rem', background: '#ffffff', borderLeft: '4px solid var(--accent-primary)' }}>
-                  <span className="metric-label" style={{ fontSize: '0.74rem' }}>Students Paid Till Date</span>
-                  <span className="metric-value" style={{ fontSize: '1.75rem', color: 'var(--accent-primary)', fontWeight: '800' }}>
+                <div className="metric-card" style={{ padding: '0.65rem 0.85rem', background: '#ffffff', borderLeft: '3px solid var(--accent-primary)', minHeight: 'auto' }}>
+                  <span className="metric-label" style={{ fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Students Paid Till Date</span>
+                  <span className="metric-value" style={{ fontSize: '1.2rem', color: 'var(--accent-primary)', fontWeight: '800', marginTop: '0.15rem' }}>
                     {revenueReport?.totalPaidStudentsCount || new Set(paymentsList.map(p => p.studentId || p.studentEmail)).size} Students
                   </span>
-                  <span className="metric-desc">Across {paymentsList.length} verified transactions</span>
+                  <span className="metric-desc" style={{ fontSize: '0.66rem', marginTop: '0.1rem' }}>Across {paymentsList.length} transactions</span>
                 </div>
 
-                <div className="metric-card" style={{ padding: '1.25rem', background: '#ffffff', borderLeft: '4px solid #6366f1' }}>
-                  <span className="metric-label" style={{ fontSize: '0.74rem' }}>Expert Payouts Share (70%)</span>
-                  <span className="metric-value" style={{ fontSize: '1.75rem', color: '#4f46e5', fontWeight: '800' }}>
+                <div className="metric-card" style={{ padding: '0.65rem 0.85rem', background: '#ffffff', borderLeft: '3px solid #6366f1', minHeight: 'auto' }}>
+                  <span className="metric-label" style={{ fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Expert Payouts Share</span>
+                  <span className="metric-value" style={{ fontSize: '1.2rem', color: '#4f46e5', fontWeight: '800', marginTop: '0.15rem' }}>
                     ${((Number(revenueReport?.totalRevenueUSD || paymentsList.reduce((sum, p) => sum + (Number(p.amount) || 0), 0))) * 0.70).toFixed(2)} USD
                   </span>
-                  <span className="metric-desc">Tutor compensation pool</span>
+                  <span className="metric-desc" style={{ fontSize: '0.66rem', marginTop: '0.1rem' }}>Tutor compensation pool</span>
                 </div>
 
-                <div className="metric-card" style={{ padding: '1.25rem', background: '#ffffff', borderLeft: '4px solid #f59e0b' }}>
-                  <span className="metric-label" style={{ fontSize: '0.74rem' }}>Net Platform Retained Margin (30%)</span>
-                  <span className="metric-value" style={{ fontSize: '1.75rem', color: '#d97706', fontWeight: '800' }}>
+                <div className="metric-card" style={{ padding: '0.65rem 0.85rem', background: '#ffffff', borderLeft: '3px solid #f59e0b', minHeight: 'auto' }}>
+                  <span className="metric-label" style={{ fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>Platform Retained Margin</span>
+                  <span className="metric-value" style={{ fontSize: '1.2rem', color: '#d97706', fontWeight: '800', marginTop: '0.15rem' }}>
                     ${((Number(revenueReport?.totalRevenueUSD || paymentsList.reduce((sum, p) => sum + (Number(p.amount) || 0), 0))) * 0.30).toFixed(2)} USD
                   </span>
-                  <span className="metric-desc">Net operating margin retained</span>
+                  <span className="metric-desc" style={{ fontSize: '0.66rem', marginTop: '0.1rem' }}>Net operating margin</span>
                 </div>
               </div>
 
@@ -4197,7 +4197,7 @@ export default function App() {
                     Expert Payout Details & Remuneration
                   </h3>
                   <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                    Platform Compensation Breakdown (70% Tutor Allocation)
+                    Platform Compensation Breakdown (Tutor Allocation)
                   </span>
                 </div>
               </div>
@@ -4214,17 +4214,19 @@ export default function App() {
             {/* Expert Info Card */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', background: '#f8fafc', padding: '1rem 1.25rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-glass)', marginBottom: '1.25rem' }}>
               <div className="user-avatar-circle" style={{ width: '42px', height: '42px', fontSize: '0.95rem', fontWeight: '700', background: '#6366f1' }}>
-                {selectedPayout.expertName ? selectedPayout.expertName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'EX'}
+                {selectedPayout.expertName ? selectedPayout.expertName.replace(/\s*\([^)]*\)/g, '').trim().split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'EX'}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span style={{ fontWeight: '800', fontSize: '0.95rem', color: 'var(--text-primary)' }}>{selectedPayout.expertName || 'Expert Mentor'}</span>
+                  <span style={{ fontWeight: '800', fontSize: '0.95rem', color: 'var(--text-primary)' }}>
+                    {selectedPayout.expertName ? selectedPayout.expertName.replace(/\s*\([^)]*\)/g, '').trim() : 'Expert Mentor'}
+                  </span>
                   <span className="badge badge-info" style={{ fontSize: '0.68rem', padding: '0.15rem 0.45rem' }}>Approved Mentor</span>
                 </div>
                 <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '0.15rem' }}>{selectedPayout.expertEmail}</div>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Expert Payout (70%)</span>
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Expert Payout Amount</span>
                 <div style={{ fontSize: '1.25rem', fontWeight: '800', color: '#4f46e5' }}>
                   ${Number(selectedPayout.amount || 0).toFixed(2)} USD
                 </div>
@@ -4275,7 +4277,7 @@ export default function App() {
               </div>
 
               <div style={{ background: '#ffffff', padding: '0.85rem 1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-glass)' }}>
-                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Platform Share (30%)</span>
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Platform Retained Share</span>
                 <div style={{ fontWeight: '700', fontSize: '0.88rem', color: 'var(--text-primary)', marginTop: '0.25rem' }}>
                   ${(Number(selectedPayout.totalOrderAmount || 150) * 0.30).toFixed(2)} USD
                 </div>
