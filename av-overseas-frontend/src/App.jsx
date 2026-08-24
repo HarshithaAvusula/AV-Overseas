@@ -1075,6 +1075,47 @@ export default function App() {
     }
   };
 
+  const generateMeetingLink = (platform = 'GOOGLE_MEET') => {
+    if (platform === 'ZOOM') {
+      const zoomMeetingId = Math.floor(1000000000 + Math.random() * 9000000000);
+      const pwd = Math.random().toString(36).substring(2, 8);
+      return `https://zoom.us/j/${zoomMeetingId}?pwd=${pwd}`;
+    }
+    const chars = 'abcdefghijklmnopqrstuvwxyz';
+    const randStr = (len) => Array.from({ length: len }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+    return `https://meet.google.com/${randStr(3)}-${randStr(4)}-${randStr(3)}`;
+  };
+
+  const getMeetingPlatformInfo = (link = '') => {
+    if (!link) return { name: 'Google Meet', icon: '🎥', color: '#1a73e8', isZoom: false };
+    if (link.toLowerCase().includes('zoom.us')) {
+      return { name: 'Zoom Meeting', icon: '💻', color: '#2d8cff', isZoom: true };
+    }
+    return { name: 'Google Meet', icon: '🎥', color: '#1a73e8', isZoom: false };
+  };
+
+  const getGoogleCalendarUrl = (m) => {
+    if (!m) return '';
+    const platform = getMeetingPlatformInfo(m.meetingLink);
+    const title = encodeURIComponent(m.title || 'AV Overseas Mentorship Session');
+    const details = encodeURIComponent(
+      `AV Overseas Mentoring Session (${platform.name})\n\nStudent: ${m.studentName || 'Student'}\nExpert Mentor: ${m.expertName || 'Expert Mentor'}\nSession Type: ${m.typeLabel || m.type || 'Academic Call'}\n\nJoin Link (${platform.name}): ${m.meetingLink || 'https://meet.google.com'}\n\nDiscussion Agenda: ${m.purpose || 'Academic guidance & requirement review'}`
+    );
+    const location = encodeURIComponent(m.meetingLink || platform.name);
+    let dateStr = '';
+    if (m.scheduledAt) {
+      try {
+        const start = new Date(m.scheduledAt);
+        const end = new Date(start.getTime() + (Number(m.durationMinutes) || 45) * 60000);
+        const formatCal = (d) => d.toISOString().replace(/-|:|\.\d\d\d/g, '');
+        dateStr = `&dates=${formatCal(start)}/${formatCal(end)}`;
+      } catch (e) {
+        // ignore date error
+      }
+    }
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${details}&location=${location}${dateStr}`;
+  };
+
   const getMeetingStatusBadge = (status) => {
     switch (status) {
       case 'LIVE':
@@ -2367,35 +2408,62 @@ export default function App() {
                       </div>
 
                       {/* Action Buttons */}
-                      <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                        {heroMeeting.meetingLink && (
-                          <a
-                            href={heroMeeting.meetingLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="btn btn-primary"
-                            style={{
-                              background: isLive ? '#ef4444' : 'var(--accent-primary)',
-                              borderColor: isLive ? '#dc2626' : 'var(--accent-primary)',
-                              fontSize: '0.88rem',
-                              padding: '0.6rem 1.25rem',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '0.5rem',
-                              fontWeight: '700',
-                              boxShadow: isLive ? '0 4px 14px rgba(239, 68, 68, 0.35)' : '0 4px 14px rgba(99, 102, 241, 0.25)'
-                            }}
-                          >
-                            <span>🚀</span> Join Meeting
-                          </a>
-                        )}
+                      <div style={{ display: 'flex', gap: '0.55rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                        {heroMeeting.meetingLink && (() => {
+                          const platform = getMeetingPlatformInfo(heroMeeting.meetingLink);
+                          return (
+                            <a
+                              href={heroMeeting.meetingLink.startsWith('http') ? heroMeeting.meetingLink : `https://${heroMeeting.meetingLink}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="btn btn-primary"
+                              style={{
+                                background: isLive ? '#ef4444' : platform.color,
+                                borderColor: isLive ? '#dc2626' : platform.color,
+                                fontSize: '0.86rem',
+                                padding: '0.55rem 1.15rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.45rem',
+                                fontWeight: '700',
+                                boxShadow: isLive ? '0 4px 14px rgba(239, 68, 68, 0.35)' : `0 4px 12px ${platform.color}40`
+                              }}
+                            >
+                              <span>{platform.icon}</span> Join {platform.name}
+                            </a>
+                          );
+                        })()}
+
+                        <a
+                          href={getGoogleCalendarUrl(heroMeeting)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn btn-secondary"
+                          style={{ fontSize: '0.8rem', padding: '0.55rem 0.85rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+                          title="Add session with meeting link to your Google Calendar"
+                        >
+                          <span>📅</span> Add to Calendar
+                        </a>
+
                         <button
                           type="button"
                           className="btn btn-secondary"
-                          style={{ fontSize: '0.85rem', padding: '0.6rem 1rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+                          style={{ fontSize: '0.8rem', padding: '0.55rem 0.85rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+                          onClick={() => {
+                            navigator.clipboard.writeText(heroMeeting.meetingLink || 'https://meet.google.com');
+                            alert('Meeting link copied to clipboard!');
+                          }}
+                        >
+                          <span>📋</span> Copy Link
+                        </button>
+
+                        <button
+                          type="button"
+                          className="btn btn-secondary"
+                          style={{ fontSize: '0.8rem', padding: '0.55rem 0.85rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
                           onClick={() => handleOpenMeetingDetails(heroMeeting)}
                         >
-                          <span>📝</span> View Details & Notes
+                          <span>📝</span> Notes & Details
                         </button>
                       </div>
                     </div>
@@ -3757,20 +3825,20 @@ export default function App() {
               </div>
 
               <div>
-                <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Platform & Access</span>
-                <div style={{ fontWeight: '600', fontSize: '0.85rem', marginTop: '0.3rem' }}>
-                  {getPlatformIcon(selectedMeeting.platform)}
+                <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Video Platform & Link</span>
+                <div style={{ fontWeight: '700', fontSize: '0.86rem', marginTop: '0.25rem', color: getMeetingPlatformInfo(selectedMeeting.meetingLink || selectedMeeting.platform).color }}>
+                  {getMeetingPlatformInfo(selectedMeeting.meetingLink || selectedMeeting.platform).icon} {getMeetingPlatformInfo(selectedMeeting.meetingLink || selectedMeeting.platform).name}
                 </div>
                 {selectedMeeting.meetingLink && (
-                  <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.35rem' }}>
+                  <div style={{ display: 'flex', gap: '0.35rem', marginTop: '0.45rem', flexWrap: 'wrap' }}>
                     <a
-                      href={selectedMeeting.meetingLink}
+                      href={selectedMeeting.meetingLink.startsWith('http') ? selectedMeeting.meetingLink : `https://${selectedMeeting.meetingLink}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="btn btn-primary"
-                      style={{ fontSize: '0.72rem', padding: '0.25rem 0.55rem' }}
+                      style={{ fontSize: '0.72rem', padding: '0.25rem 0.6rem', fontWeight: '700', background: getMeetingPlatformInfo(selectedMeeting.meetingLink).color, borderColor: getMeetingPlatformInfo(selectedMeeting.meetingLink).color }}
                     >
-                      Open Link
+                      🚀 Join Call
                     </a>
                     <button
                       type="button"
@@ -3781,8 +3849,18 @@ export default function App() {
                         alert('Meeting link copied to clipboard!');
                       }}
                     >
-                      Copy Link
+                      📋 Copy
                     </button>
+                    <a
+                      href={getGoogleCalendarUrl(selectedMeeting)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn btn-secondary"
+                      style={{ fontSize: '0.72rem', padding: '0.25rem 0.55rem' }}
+                      title="Sync session to Google Calendar"
+                    >
+                      📅 Calendar
+                    </a>
                   </div>
                 )}
               </div>
@@ -3995,13 +4073,67 @@ export default function App() {
                   <select
                     className="form-input"
                     value={newMeetingForm.platform}
-                    onChange={e => setNewMeetingForm({ ...newMeetingForm, platform: e.target.value })}
+                    onChange={e => {
+                      const plat = e.target.value;
+                      setNewMeetingForm(prev => ({
+                        ...prev,
+                        platform: plat,
+                        meetingLink: plat === 'Google Meet' ? generateMeetingLink('GOOGLE_MEET') : plat === 'Zoom' ? generateMeetingLink('ZOOM') : prev.meetingLink
+                      }));
+                    }}
                   >
-                    <option value="Zoom">Zoom Room</option>
-                    <option value="Google Meet">Google Meet</option>
-                    <option value="Jitsi">Jitsi Meet (In-Browser)</option>
+                    <option value="Google Meet">🎥 Google Meet (meet.google.com)</option>
+                    <option value="Zoom">💻 Zoom Meeting (zoom.us)</option>
+                    <option value="Jitsi">🌐 Jitsi Meet (In-Browser)</option>
                   </select>
                 </div>
+              </div>
+
+              {/* Instant Link Generator & Custom URL */}
+              <div className="form-group">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem', flexWrap: 'wrap', gap: '0.4rem' }}>
+                  <label className="form-label" style={{ margin: 0, fontWeight: '700' }}>
+                    🔗 Session Video Meeting Link
+                  </label>
+                  <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      style={{ fontSize: '0.72rem', padding: '0.2rem 0.5rem', background: '#e8f0fe', color: '#1a73e8', borderColor: '#d2e3fc', fontWeight: '700' }}
+                      onClick={() => setNewMeetingForm(prev => ({ ...prev, platform: 'Google Meet', meetingLink: generateMeetingLink('GOOGLE_MEET') }))}
+                    >
+                      ⚡ Generate Google Meet
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      style={{ fontSize: '0.72rem', padding: '0.2rem 0.5rem', background: '#e6f4ff', color: '#0958d9', borderColor: '#91caff', fontWeight: '700' }}
+                      onClick={() => setNewMeetingForm(prev => ({ ...prev, platform: 'Zoom', meetingLink: generateMeetingLink('ZOOM') }))}
+                    >
+                      ⚡ Generate Zoom Link
+                    </button>
+                    <a
+                      href="https://meet.new"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn btn-secondary"
+                      style={{ fontSize: '0.72rem', padding: '0.2rem 0.45rem' }}
+                      title="Create official Google Meet room"
+                    >
+                      meet.new
+                    </a>
+                  </div>
+                </div>
+                <input
+                  type="url"
+                  className="form-input"
+                  placeholder="e.g. https://meet.google.com/abc-defg-hij or https://zoom.us/j/..."
+                  value={newMeetingForm.meetingLink || ''}
+                  onChange={e => setNewMeetingForm(prev => ({ ...prev, meetingLink: e.target.value }))}
+                />
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.25rem', display: 'block' }}>
+                  Auto-filled with instant room URL. You can also paste your own Google Meet / Zoom link.
+                </span>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '1rem' }}>
